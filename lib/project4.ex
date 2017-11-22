@@ -9,8 +9,13 @@ defmodule Server do
   #handle call for registering a new process, 
   #needs to be handle call only since can't tweet until registered
   def handle_call(:register, clientPid, state) do
+    IO.puts "registering client"
     Engine.register(clientPid)
     {:reply, :registered, state}
+  end
+
+  def init(state) do
+    {:ok, state}
   end
 end
 
@@ -28,7 +33,6 @@ defmodule Project4 do
         GenServer.call(:server, :start, :infinity)
         #IO.inspect Process.alive?(pid)
       role == "client" ->
-        Node.connect :server@server
         Client.start
       true ->
         true
