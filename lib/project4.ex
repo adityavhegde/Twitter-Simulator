@@ -14,7 +14,7 @@ defmodule Server do
   end
   def handle_cast({:tweet_subscribers, tweetText, clientId}, state) do
     ServerApi.tweetSubscribers(clientId, tweetText)
-    ServerApi.tweetMentions(clientId, tweetText)
+    ServerApi.tweetMentions(tweetText)
   end
 end
 
