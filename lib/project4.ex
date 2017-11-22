@@ -1,25 +1,20 @@
 defmodule Server do
   use GenServer
   def handle_call(:start, from, state) do
+    TwitterHelper.startNode
+    #Engine.startServer
     Engine.initTables
     {:reply, :started, state}
   end
-  def handle_call(:register, userName, state) do
-    Engine.register(userName)
+  #handle call for registering a new process,
+  #needs to be handle call only since can't tweet until registered
+  def handle_call(:register, clientPid, state) do
+    Engine.register(clientPid)
     {:reply, :registered, state}
   end
-  # sends tweets to followers and mentions
   def handle_cast({:tweet_subscribers, tweetText, clientId}, state) do
-    # send tweets to followers
-    # clientId is the PID of requesting process
     ServerApi.tweetSubscribers(clientId, tweetText)
-
-    #tweet the mentions
     ServerApi.tweetMentions(clientId, tweetText)
-
-  end
-  def handle_cast({:tweet_search, search_term}, state) do
-    # TODO see if this needs to be a handle_call
   end
 end
 
@@ -32,12 +27,22 @@ defmodule Project4 do
     cond do
       role == "server" ->
         state = :running
-        {:ok, _} = GenServer.start(Server, state, name: :server)
+        TwitterHelper.startNode
+        {:ok, pid} = GenServer.start(Server, state, name: :server)
         GenServer.call(:server, :start, :infinity)
+        #IO.inspect Process.alive?(pid)
       role == "client" ->
-        Client.start
+        Node.start :"client@192.168.0"
+        Node.set_cookie :xyzzy
+        Node.connect "server@192.168.0.17"
+        #Client.start
       true ->
         true
+    end
+
+    receive do
+      :test ->
+        IO.puts "test"
     end
   end
 

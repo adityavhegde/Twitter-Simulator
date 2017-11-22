@@ -1,16 +1,28 @@
 defmodule ServerApi do
-  @spec getMentions(String.t) :: list
-  def getMentions(tweetText) do
-    # cases start with mention and reach the end of string
-    # starts with mention and reaches a string
-    # starts with a mention and reaches another mention
-    
+  def getMentions(tweetText, index) do
+    cond do
+      String.length(tweetText) == 0 -> []
+      index == String.length(tweetText) - 1 -> []
+      String.at(tweetText, index) == "@" -> getMentions(tweetText, index+1, [], "")
+      true-> getMentions(tweetText, index+1)
+    end
   end
-  def getMentions(tweetText, "@") do
-
-  end
-  def getMentions(tweetText, mention) do
-
+  def getMentions(tweetText, index, list, acc) do
+    cond do
+      index == String.length(tweetText) - 1 ->
+        cond do
+          String.at(tweetText, index) == "@" -> list ++ [String.trim(acc)]
+          true ->
+            acc = acc<>String.at(tweetText, index)
+            list ++ [String.trim(acc)]
+        end
+      String.at(tweetText, index) == "@" ->
+        list = list ++ [String.trim(acc)]
+        getMentions(tweetText, index+1, list, "")
+      true ->
+        acc = acc<>String.at(tweetText, index)
+        getMentions(tweetText, index+1, list, acc)
+    end
   end
 
   def tweetSubscribers(clientId, tweetText) do
@@ -20,8 +32,8 @@ defmodule ServerApi do
   end
 
   def tweetMentions(clientId, tweetText) do
-    tweetText |> getMentions() |> Enum.each(fn(pid) ->
-      GenServer.cast(pid, tweetText)
+    tweetText |> getMentions() |> Enum.each(fn(userName) ->
+      userName |> Engine.getPid() |> GenServer.cast(tweetText)
     end)
   end
 end
