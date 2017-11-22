@@ -1,11 +1,6 @@
 defmodule TwitterHelper do
     def startNode do
-        #get the ip of current node, and start it
-        {:ok, list_ips} = :inet.getif()
-        current_ip = TwitterHelper.getIp
-            
-        IO.inspect current_ip
-        nodeFullName = "server@127.0.0.1"#<>current_ip
+        nodeFullName = "server@127.0.0.1"
         Node.start (String.to_atom(nodeFullName))
         Node.set_cookie :twitter
         IO.inspect {Node.self, Node.get_cookie}

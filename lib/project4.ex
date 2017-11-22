@@ -8,9 +8,9 @@ defmodule Server do
   end
   #handle call for registering a new process, 
   #needs to be handle call only since can't tweet until registered
-  def handle_call(:register, clientPid, state) do
+  def handle_call({:register, userName}, clientPid, state) do
     IO.puts "registering client"
-    Engine.register(clientPid)
+    Engine.register(clientPid, userName)
     {:reply, :registered, state}
   end
 
@@ -28,10 +28,8 @@ defmodule Project4 do
     cond do
       role == "server" ->
         state = :running
-        TwitterHelper.startNode
         {:ok, pid} = GenServer.start(Server, state, name: :server)
         GenServer.call(:server, :start, :infinity)
-        #IO.inspect Process.alive?(pid)
       role == "client" ->
         Client.start
       true ->
