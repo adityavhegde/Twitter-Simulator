@@ -7,6 +7,9 @@ defmodule Engine do
     end
 
     def register(userName) do
-        
+
+    end
+    def getFollowers(userName) do
+      :ets.lookup(:users, username)
     end
 end
