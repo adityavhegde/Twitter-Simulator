@@ -1,5 +1,6 @@
 defmodule Engine do
     use GenServer
+<<<<<<< HEAD
     def startServer do
         nodeFullName = "server@127.0.0.1"
         Node.start (String.to_atom(nodeFullName))
@@ -8,6 +9,9 @@ defmodule Engine do
     end
 
     #function to initialize in-memory tables
+=======
+    function to initialize in-memory tables
+>>>>>>> server
     def initTables do
         #initialize users table with user_id and username
         :ets.new(:users, [:set, :protected, :named_table])
@@ -19,6 +23,7 @@ defmodule Engine do
         :ets.insert_new(:users, {clientPid, userName, []})
     end
 
+<<<<<<< HEAD
     #subscribe to a user
     def subscribe(userToSub, clientPid) do
         IO.puts "here"
@@ -40,5 +45,12 @@ defmodule Engine do
     def keys(table_name, current_key, acc) do
         next_key = :ets.next(table_name, current_key)
         keys(table_name, next_key, [next_key|acc])
+=======
+    def register(userName) do
+
+    end
+    def getFollowers(userName) do
+      :ets.lookup(:users, username)
+>>>>>>> server
     end
 end
