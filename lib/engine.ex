@@ -23,14 +23,6 @@ defmodule Engine do
   """
   use GenServer
 
-  #TODO why is this here ?
-  def startServer do
-      nodeFullName = "server@127.0.0.1"
-      Node.start (String.to_atom(nodeFullName))
-      Node.set_cookie :twitter
-      #IO.inspect {Node.self, Node.get_cookie}
-  end
-
   #function to initialize in-memory tables
   def initTables do
     #initialize all tables. See moduledoc for details
