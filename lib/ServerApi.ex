@@ -8,6 +8,7 @@ defmodule ServerApi do
   end
 
   def tweetMentions(tweetText) do
+    #TODO getPid
     tweetText |> ServerApiUtils.getMentions(0) |> Enum.each(fn(userName) ->
       userName |> Engine.getPid() |> GenServer.cast(tweetText)
     end)
