@@ -25,9 +25,9 @@ defmodule Server do
   end
 
   #
-  def handle_cast({:tweet_subscribers, tweetText, clientId}, state) do
+  def handle_cast({:tweet_subscribers, tweetText, userName}, state) do
     #IO.inspect :ets.lookup(:users, clientId)
-    ServerApi.tweetSubscribers(clientId, tweetText)
+    ServerApi.tweetSubscribers(userName, tweetText)
     ServerApi.tweetMentions(tweetText)
     {:noreply, state}
   end

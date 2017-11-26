@@ -24,7 +24,11 @@ defmodule Simulator do
     Enum.each(actorsPid, fn(client) ->
       mention = selectRandomMention(actorsPid, client)
       tweetText = "tweet@"<>(:erlang.pid_to_list(mention) |> List.to_string)<>TwitterHelper.getHashtag
-      Client.sendTweet(tweetText)
+      IO.inspect :ets.lookup(:usersSimulator, client)
+      :ets.lookup(:usersSimulator, client) 
+      |> Enum.at(0) 
+      |> elem(1)
+      |> Client.sendTweet(tweetText)
     end)
   end
 

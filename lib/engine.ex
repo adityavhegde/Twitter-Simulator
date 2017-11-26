@@ -20,6 +20,7 @@ defmodule Engine do
     #userName is client's PID
     def register(clientPid, userName) do
         :ets.insert_new(:users, {clientPid, userName, []})
+        :ets.insert_new(:userPid, {userName, clientPid})
         #IO.inspect :ets.lookup(:users, clientPid)
     end
 

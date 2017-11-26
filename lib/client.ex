@@ -25,10 +25,10 @@ defmodule Client do
                 |> Base.encode16()
   end
 
-  def sendTweet(tweetText) do
+  def sendTweet(clientUserName, tweetText) do
     # gets a send tweet request
     # send tweetMessage to server
-    GenServer.cast({:server, :"server@127.0.0.1"}, {:tweet_subscribers, tweetText, self})
+    GenServer.cast({:server, :"server@127.0.0.1"}, {:tweet_subscribers, tweetText, clientUserName})
   end
 
   def retweet do
