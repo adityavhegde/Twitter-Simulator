@@ -40,48 +40,108 @@ defmodule Engine do
     :ets.insert_new(:userPid, {userName, clientPid})
   end
 
-  #subscribe to a user
+  @doc """
+  Subscribe the clientPid to the userToSubPid
+  Upon subscription, the clientPid becomes a follower of userToSubPid
+
+  The userToSubPid is also added to clientPid's 'list of people I follow'
+  This association is made by also inserting in the :following table
+  """
   #TODO userToSubPid can be changed to userName, just as it would happen in a normal tweet
   def subscribe(userToSubPid, clientPid) do
     [{userToSubPid, userName, followers}] = :ets.lookup(:users, userToSubPid)
     followers = followers ++ [clientPid]
     :ets.insert(:users, {userToSubPid, userName, followers})
 
-    # also insert in the following table
-    [{_, listOfPeopleIFollow}] = :ets.lookup(:following, clientPid)
-    listOfPeopleIFollow = listOfPeopleIFollow ++ [userToSubPid]
-    :ets.insert(:following, {clientPid, listOfPeopleIFollow})
+    # also insert in the :following table
+    toFollow = cond do
+      :ets.member(:following, clientPid) ->
+        [{_, listOfPeopleIFollow}] = :ets.lookup(:following, clientPid)
+        listOfPeopleIFollow = listOfPeopleIFollow ++ [userToSubPid]
+      true -> [userToSubPid]
+    end
+    :ets.insert(:following, {clientPid, toFollow})
   end
 
-  def writeTweet(clientPid, tweet) do
-    #TODO finish This
-    #TODO how to maintain sequence_num -> mostly on main server process
-    #TODO write a function to extract hashtags and make an insert in hashtag table
-    #TODO also make an insert in the mentions table
+  @doc """
+  Takes as input a clientPid, tweetText contaning hashtag and mentions, a sequenceNum
+  Makes an insertion in - tweets, hashtag, userMentions
+  """
+  def writeTweet(clientPid, tweetText, sequenceNum) do
+    tweet = cond do
+      :ets.member(:tweets, clientPid) ->
+        [{_, tweet_list}] = :ets.lookup(:tweets, clientPid)
+        tweet_list ++ [[sequenceNum, tweetText]]
+      true ->
+        [[sequenceNum, tweetText]]
+    end
+    :ets.insert(:tweets, {clientPid, tweet})
+
+    # insertion into the hashtag table
+    ServerApiUtils.excrateFromTweet(tweetText, 0, "#")
+      |> Enum.each(fn(hashtag) ->
+          tweet = cond do
+            :ets.member(:hashtag, hashtag) ->
+              [{_, tweet_list}] = :ets.lookup(:hashtag, hashtag)
+              tweet_list ++ [[sequenceNum, tweetText]]
+            true -> [[sequenceNum, tweetText]]
+          end
+          :ets.insert(:hashtag, {hashtag, tweet})
+      end)
+
+    # insertion into the userMentions table
+    ServerApiUtils.excrateFromTweet(tweetText, 0, "@")
+      |> Enum.each(fn(mention)->
+        mention = EngineUtils.mentionToPid(mention)
+        tweet = cond do
+          :ets.member(:userMentions, mention) ->
+            [{_, tweet_list}] = :ets.lookup(:userMentions, mention)
+            tweet_list ++ [[sequenceNum, tweetText]]
+          true -> [[sequenceNum, tweetText]]
+        end
+        :ets.insert(:userMentions, {mention, tweet})
+    end)
   end
 
   #----------------------------------------------------------------------------
   # Below: functions that only read from database
   # Do not add write functions
+
+  @doc """
+  Returns a list of pid's of followers for a given pid
+  """
   @spec getFollowers(pid) :: list
   def getFollowers(userPid) do
-    :ets.lookup(:users, userPid) |> Enum.at(0) |> elem(2)
+    [{_, _, follower_list}] = :ets.lookup(:users, userPid)
+    follower_list
   end
 
+  @doc """
+  Returns a list of pid's of all the users, a pid is following
+  """
   @spec getFollowing(pid) :: list
   def getFollowing(clientPid) do
-    :ets.lookup(:following, clientPid) |> Enum.at(0) |> elem(1)
+    [{_, peopleIFollow}] = :ets.lookup(:following, clientPid)
+    peopleIFollow
   end
 
+  @doc """
+  Returns the pid, given a username
+  """
   @spec getPid(String.t) :: pid
   def getPid(userName) do
-    :ets.lookup(:userPid, userName) |> Enum.at(0) |> elem(1)
+    [{_, pid}] = :ets.lookup(:userPid, userName)
+    pid
   end
 
+  @doc """
+  Returns all the tweets of a given pid (user/client)
+  """
   @spec getTweets(pid) :: list
   def getTweets(clientPid) do
     #TODO sort tweets based on sequence number in descending order
-    :ets.lookup(:tweets, clientPid)
+    [{_, tweet_list}]= :ets.lookup(:tweets, clientPid)
+    tweet_list
   end
 
   @doc """
@@ -94,13 +154,18 @@ defmodule Engine do
   @spec getTweetsHavingHashtag(String.t) :: list
   def getTweetsHavingHashtag(hashtag) do
     #TODO do the sorting of tweets
-    :ets.lookup(:hashtag, hashtag)
+    [{_, tweet_list}] = :ets.lookup(:hashtag, hashtag)
+    tweet_list
   end
 
+  @doc """
+  Returns a list of tweets where a pid has been mentioned
+  """
   @spec getMentions(pid) :: list
   def getMentions(clientPid) do
     #TODO sorting tweets
-    :ets.lookup(:userMentions, clientPid)
+    [{_, tweet_list}] = :ets.lookup(:userMentions, clientPid)
+    tweet_list
   end
  end
 
@@ -109,4 +174,16 @@ defmodule EngineUtils do
   Utility functions for Engine module
   """
 
+  @doc """
+  Turns a mention into a pid
+    eg: mention = '<0.81.0>'
+    mention |> EngineUtils.mentionToPid
+    This transforms the mention into a pid - #PID<0.81.0>
+  Warning: :erlang.list_to_pid should only be used for debugging purposes
+    This dependency should be removed in future version
+  """
+  @spec mentionToPid(String.t) :: pid
+  def mentionToPid(mention) do
+    :erlang.list_to_pid('#{mention}')
+  end
 end

@@ -14,8 +14,11 @@ defmodule Server do
     {:reply, :registered, state}
   end
   #handle_cast to subscribe client to a user
-  def handle_cast({:subscribe, userToSub, clientPid}, state) do
-    Engine.subscribe(userToSub, clientPid)
+  def handle_cast({:subscribe, usersToSub, clientPid}, state) do
+    # usersToSub is a list of pid's
+    usersToSub |> Enum.each(fn(userPid)->
+      Engine.subscribe(userPid, clientPid)
+    end)
     {:noreply, state}
   end
   def handle_call(:getUsers, from, state) do
@@ -27,7 +30,7 @@ defmodule Server do
     ServerApi.tweetMentions(tweetText)
     {:noreply, state}
   end
-
+  #TODO all the handle casts for search
   def init(state) do
     {:ok, state}
   end
@@ -54,15 +57,10 @@ defmodule Project4 do
     cond do
       role == "server" ->
         state = :running
-<<<<<<< HEAD
-=======
-        TwitterHelper.startNode
->>>>>>> server
         {:ok, pid} = GenServer.start(Server, state, name: :server)
         GenServer.call(:server, :start, :infinity)
         #IO.inspect Process.alive?(pid)
       role == "client" ->
-<<<<<<< HEAD
         state = :running
         #Simulator.startClientNode
         nodeName = "client@127.0.0.1"
@@ -76,20 +74,10 @@ defmodule Project4 do
         #IO.inspect Process.alive?(pid)
         #Client.start
         #Client.subscribe
-=======
-        Node.start :"client@192.168.0"
-        Node.set_cookie :xyzzy
-        Node.connect "server@192.168.0.17"
-        #Client.start
->>>>>>> server
       true ->
         true
     end
 
-<<<<<<< HEAD
-    #IO.inspect Process.alive?(pid)
-=======
->>>>>>> server
     receive do
       :test ->
         IO.puts "test"
@@ -98,13 +86,8 @@ defmodule Project4 do
 
   #parsing the input argument
   defp parse_args(args) do
-<<<<<<< HEAD
     {_, word, _} = args
     |> OptionParser.parse(strict: [:string, :integer, :string])
-=======
-    {_, word, _} = args
-    |> OptionParser.parse(strict: [:integer, :string, :string])
->>>>>>> server
     word
   end
 end

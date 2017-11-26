@@ -3,9 +3,6 @@ defmodule ReadTweets do
   This is an Actor to handle incoming search requests
   The main Server delegates search queries to this Actor
 
-  Additionally, this module als has functions to sort the tweet based on
-  timestamps and send them to requestor
-
   """
   use GenServer
 
@@ -15,7 +12,7 @@ defmodule ReadTweets do
   """
   def handle_cast({:search, clientId}, state) do
     Engine.getFollowing(clientId) |> Enum.each(fn(person_i_follow) ->
-      Engine.getTweets() |> Enum.each(fn(tweet) ->
+      Engine.getTweets(person_i_follow) |> Enum.each(fn(tweet) ->
         # tweet -> [tweet_id, tweetText]
         # TODO turns into just a list of tweetTexts after sorting
         GenServer.cast({clientId, :"simulator@127.0.0.1"}, {:search_result, Enum.at(tweet, 1)})
@@ -52,5 +49,4 @@ defmodule ReadTweets do
   def init(state) do
     {:ok, state}
   end
-
 end

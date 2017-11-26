@@ -1,29 +1,29 @@
 defmodule ServerApiUtils do
-  @spec getMentions(String.t, integer) :: list
-  def getMentions(tweetText, index) do
+  @spec excrateFromTweet(String.t, integer, String.t) :: list
+  def excrateFromTweet(tweetText, index, htOrMention) do
     cond do
       String.length(tweetText) == 0 -> []
       index == String.length(tweetText) - 1 -> []
-      String.at(tweetText, index) == "@" -> getMentions(tweetText, index+1, [], "")
-      true-> getMentions(tweetText, index+1)
+      String.at(tweetText, index) == htOrMention -> excrateFromTweet(tweetText, index+1, [], "", htOrMention)
+      true-> excrateFromTweet(tweetText, index+1, htOrMention)
     end
   end
-  @spec  getMentions(String.t, integer, list, String.t) :: list
-  def getMentions(tweetText, index, list, acc) do
+  @spec  excrateFromTweet(String.t, integer, list, String.t, String.t) :: list
+  def excrateFromTweet(tweetText, index, list, acc, htOrMention) do
     cond do
       index == String.length(tweetText) - 1 ->
         cond do
-          String.at(tweetText, index) == "@" -> list ++ [String.trim(acc)]
+          String.at(tweetText, index) == htOrMention -> list ++ [String.trim(acc)]
           true ->
             acc = acc<>String.at(tweetText, index)
             list ++ [String.trim(acc)]
         end
-      String.at(tweetText, index) == "@" ->
+      String.at(tweetText, index) == htOrMention ->
         list = list ++ [String.trim(acc)]
-        getMentions(tweetText, index+1, list, "")
+        excrateFromTweet(tweetText, index+1, list, "", htOrMention)
       true ->
         acc = acc<>String.at(tweetText, index)
-        getMentions(tweetText, index+1, list, acc)
+        excrateFromTweet(tweetText, index+1, list, acc, htOrMention)
     end
   end
 end
