@@ -3,10 +3,7 @@ defmodule ServerApi do
   def tweetSubscribers(userName, tweetText) do
     #TODO send only to users that are connected
     #get client id for given username, get its followers, and send them the tweets
-    IO.inspect :ets.lookup(:userPid, userName)
-    :ets.lookup(:userPid, userName)
-    |> Enum.at(0)
-    |> elem(1)
+    Engine.getPid(username)
     |> Engine.getFollowers()
     |> Enum.each(fn(pid) ->
       GenServer.cast(pid, tweetText)
