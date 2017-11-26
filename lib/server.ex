@@ -24,16 +24,18 @@ defmodule Server do
     {:reply, :registered, state}
   end
   # handle_cast to subscribe user/client to another user/client
-  def handle_cast({:subscribe, usersToSub, clientPid}, state) do
+  def handle_call({:subscribe, usersToSub}, clientPid, state) do
     # usersToSub is a list of pid's
-    usersToSub |> Enum.each(fn(userPid)->
+    usersToSub |> Enum.each(fn(userName)->
+      userPid = Engine.getPid(userName)
       Engine.subscribe(userPid, clientPid)
     end)
     {:noreply, state}
   end
   #-----------------------------------------------------------------------------
   # Write and send tweets to subscribers
-  def handle_cast({:tweet_subscribers, tweetText, clientId}, state) do
+  def handle_cast({:tweet_subscribers, tweetText, userName}, state) do
+    clientId = Engine.getPid(userName)
     state = ServerApi.write(state, clientId, tweetText)
     ServerApi.tweetSubscribers(clientId, tweetText)
     ServerApi.tweetMentions(tweetText)
@@ -41,15 +43,18 @@ defmodule Server do
   end
   #-----------------------------------------------------------------------------
   # Handle search requests by clients
-  def handle_cast({:search, clientId}, state) do
+  def handle_cast({:search, userName}, state) do
+    clientId = Engine.getPid(userName)
     state = ServerApi.read(state, {:search, clientId})
     {:noreply, state}
   end
-  def handle_cast({:search_hashtag, clientId, hashtag_list}, state) do
+  def handle_cast({:search_hashtag, userName, hashtag_list}, state) do
+    clientId = Engine.getPid(userName)
     state = ServerApi.read(state, {:search_hashtag, clientId, hashtag_list})
     {:noreply, state}
   end
-  def handle_cast({:search_mentions, clientId}, state) do
+  def handle_cast({:search_mentions, userName}, state) do
+    clientId = Engine.getPid(userName)
     state = ServerApi.read(state, {:search_mentions, clientId})
     {:noreply, state}
   end
