@@ -71,7 +71,7 @@ defmodule Engine do
     tweet = cond do
       :ets.member(:tweets, clientPid) ->
         [{_, tweet_list}] = :ets.lookup(:tweets, clientPid)
-        tweet_list ++ [[sequenceNum, tweetText]]
+        [[sequenceNum, tweetText]] ++ tweet_list
       true ->
         [[sequenceNum, tweetText]]
     end
@@ -83,7 +83,7 @@ defmodule Engine do
           tweet = cond do
             :ets.member(:hashtag, hashtag) ->
               [{_, tweet_list}] = :ets.lookup(:hashtag, hashtag)
-              tweet_list ++ [[sequenceNum, tweetText]]
+              [[sequenceNum, tweetText]] ++ tweet_list
             true -> [[sequenceNum, tweetText]]
           end
           :ets.insert(:hashtag, {hashtag, tweet})
@@ -96,7 +96,7 @@ defmodule Engine do
         tweet = cond do
           :ets.member(:userMentions, mention) ->
             [{_, tweet_list}] = :ets.lookup(:userMentions, mention)
-            tweet_list ++ [[sequenceNum, tweetText]]
+            [[sequenceNum, tweetText]] ++ tweet_list
           true -> [[sequenceNum, tweetText]]
         end
         :ets.insert(:userMentions, {mention, tweet})

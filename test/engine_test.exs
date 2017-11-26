@@ -23,10 +23,10 @@ defmodule EngineTest do
     Engine.writeTweet(pid, tweetText1, sequenceNum)
     Engine.writeTweet(pid, tweetText2, sequenceNum+1)
     [{_, tweet_list}] = :ets.lookup(:tweets, pid)
-    assert tweet_list == [[1, tweetText1],[2, tweetText2]]
+    assert tweet_list == [[2, tweetText2], [1, tweetText1]]
 
     [{_, tweet_list_ht}] = :ets.lookup(:hashtag, "studentLife")
-    assert tweet_list_ht == [[1, tweetText1],[2, tweetText2]]
+    assert tweet_list_ht == [[2, tweetText2], [1, tweetText1]]
 
     [{_, tweet_list_mn}] = :ets.lookup(:userMentions, pid)
     assert tweet_list_mn == [[1, tweetText1]]
@@ -82,7 +82,7 @@ defmodule EngineTest do
     Engine.writeTweet(pid, tweetText1, sequenceNum)
     Engine.writeTweet(pid, tweetText2, sequenceNum+1)
 
-    assert Engine.getTweets(pid) == [[1, tweetText1],[2, tweetText2]]
+    assert Engine.getTweets(pid) == [[2, tweetText2], [1, tweetText1]]
   end
   #-----------------------------------------------------------------------------
   # Test util functions
