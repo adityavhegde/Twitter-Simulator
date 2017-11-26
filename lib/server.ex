@@ -24,10 +24,10 @@ defmodule Server do
     {:reply, :registered, state}
   end
   # handle_cast to subscribe user/client to another user/client
-  def handle_cast({:subscribe, usersToSub, clientPid}, state) do
+  def handle_cast({:subscribe, usernamesToSub, clientPid}, state) do
     # usersToSub is a list of pid's
-    usersToSub |> Enum.each(fn(userPid)->
-      Engine.subscribe(userPid, clientPid)
+    usernamesToSub |> Enum.each(fn(username)->
+      Engine.subscribe(username, clientPid)
     end)
     {:noreply, state}
   end

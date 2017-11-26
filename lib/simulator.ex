@@ -15,21 +15,41 @@ defmodule Simulator do
   def subscribe(actorsPid) do
     Enum.each(actorsPid, fn(clientPid) ->
       usersToSub = Enum.take_random(actorsPid--[clientPid], 5)
-      GenServer.call(clientPid, {:subscribe, usersToSub}, :infinity)
+      usernamesToSub = Enum.map(usersToSub, fn(userPids) ->
+        Simulator.getUsername(usersToSub)
+      end)
+      GenServer.cast(clientPid, {:subscribe, usernamesToSub})
     end)
   end
 
   #function to send tweets
   def sendTweet(actorsPid) do
     Enum.each(actorsPid, fn(client) ->
-      mention = selectRandomMention(actorsPid, client)
-      tweetText = "tweet@"<>(:erlang.pid_to_list(mention) |> List.to_string)<>getHashtag
-      IO.inspect :ets.lookup(:usersSimulator, client)
-      :ets.lookup(:usersSimulator, client)
-      |> Enum.at(0)
-      |> elem(1)
-      |> Client.sendTweet(tweetText)
+      mention = selectRandomMention(actorsPid, client) 
+                |> Simulator.getUsername
+      tweetText = "tweet@"<>mention<>getHashtag
+      #IO.inspect :ets.lookup(:usersSimulator, client)
+      userName = Simulator.getUsername(client)
+      GenServer.cast(client, {:tweet_subscribers, tweetText, userName}})
     end)
+  end
+
+  @doc """
+  Asks client to get tweets of users subscribed to
+  """
+  def searchTweet(actorsPid) do
+    Enum.each(actorsPid, fn(client) ->
+      GenServer.cast(client, {:search, userName})
+    end)
+  end
+
+  @doc """
+  Returns the username, given a pid
+  """
+  @spec getUsername(pid) :: String.t
+  def getUsername(pid) do
+    [{_, userName, _}] = :ets.lookup(:usersSimulator, pid)
+    userName
   end
 
   def selectRandomMention(actorsPid, clientPid) do

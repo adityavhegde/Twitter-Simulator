@@ -40,8 +40,8 @@ defmodule Client do
     # request the server when this client goes from sleep to live
   end
 
-  def subscribeUsers(usersToSub) do
-    GenServer.cast({:server, :"server@127.0.0.1"}, {:subscribe, usersToSub, self()})
+  def subscribeUsers(usernamesToSub) do
+    GenServer.call({:server, :"server@127.0.0.1"}, {:subscribe, usernamesToSub, self()}, :infinity)
   end
 
   def register(userName) do
@@ -58,10 +58,25 @@ defmodule Client do
   end
 
   #tell a client PID to subscribe to a list of users' PIDs
-  def handle_call({:subscribe, usersToSub}, userPid, state) do
-    Client.subscribeUsers(usersToSub)
+  def handle_cast({:subscribe, usernamesToSub}, state) do
+    Client.subscribeUsers(usernamesToSub)
     {:reply, {:subscribed}, state}
   end
+
+  def handle_cast({:tweet_subscribers, tweetText, userName}) do
+    GenServer.cast({:server, :"server@127.0.0.1"}, {:tweet_subscribers, tweetText, userName})
+  end
+
+  #GenServer callback to search for tweets of all users "userName" has subscribed to
+  def handle_cast({:search, userName}) do
+    GenServer.cast({:server, :"server@127.0.0.1"}, {:search})
+  end
+
+  #GenServer.callback to receive tweets from users subscribed to
+  def handle_cast({:search_result, tweetText}) do
+    IO.puts tweetText
+  end
+  
 
   def init(state) do
     {:ok, state}
