@@ -1,34 +1,34 @@
 defmodule Client do
   use GenServer
-  def start do
+#to start an actor
+  def start(clientSerial) do
     IO.inspect self()
     userName = :md5
-                |> :crypto.hash(Kernel.inspect(self()))
+                |> :crypto.hash(clientSerial)
                 |> Base.encode16()
                 #|> String.to_atom
     #IO.inspect userName
-    #nodeName = userName<>"@127.0.0.1"
+    nodeName = userName<>"@127.0.0.1"
     #nodeName = "client@127.0.0.1"
     #IO.puts nodeName
-    #Node.start String.to_atom(nodeName)#:"client@127.0.0.1"
-    #Node.set_cookie :twitter
-    #IO.inspect Node.self
+    Node.start String.to_atom(nodeName)#:"client@127.0.0.1"
+    Node.set_cookie :twitter
+    IO.inspect Node.self
     #Node.connect :"server@127.0.0.1"
     GenServer.call({:server, :"server@127.0.0.1"} , {:register, userName}, :infinity)
   end
 
-  def requestMentions do
-    # request the users this client can mention in tweet
-    # this request is sent to the server (decide how often this happens)
-    # update mentions in state
+  #to start multiple actors
+  def start() do
+    userName = :md5
+                |> :crypto.hash(Kernel.inspect(self))
+                |> Base.encode16()
   end
 
-  def sendTweet do
+  def sendTweet(clientUserName, tweetText) do
     # gets a send tweet request
-    # generates a random tweet
-    # add random hashtags
-    # select a random mention from state (this was set using requestMentions)
     # send tweetMessage to server
+    GenServer.cast({:server, :"server@127.0.0.1"}, {:tweet_subscribers, tweetText, clientUserName})
   end
 
   def retweet do
@@ -40,13 +40,27 @@ defmodule Client do
     # request the server when this client goes from sleep to live
   end
 
-  def subscribeUsers(listOfClients) do
-    GenServer.cast({:server, :"server@127.0.0.1"}, {:subscribe, listOfClients, self()})
+  def subscribeUsers(usersToSub) do
+    GenServer.cast({:server, :"server@127.0.0.1"}, {:subscribe, usersToSub, self()})
   end
 
-  def handle_call(:register, _, state) do
-    Client.start
-    {:reply, :registered, state}
+  def register(userName) do
+    GenServer.call({:server, :"server@127.0.0.1"}, {:register, userName}, :infinity)
+  end
+
+#---------------------------------------------------------------------
+#GenServer callbacks for the client
+
+  def handle_call({:register, userName}, _, state) do
+    #IO.inspect self()
+    Client.register(userName)
+    {:reply, {:registered}, state}
+  end
+
+  #tell a client PID to subscribe to a list of users' PIDs
+  def handle_call({:subscribe, usersToSub}, userPid, state) do
+    Client.subscribeUsers(usersToSub)
+    {:reply, {:subscribed}, state}
   end
 
   def init(state) do

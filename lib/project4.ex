@@ -9,8 +9,9 @@ defmodule Server do
   #handle call for registering a new process,
   #needs to be handle call only since can't tweet until registered
   def handle_call({:register, userName}, clientPid, state) do
-    IO.puts "registering client"
-    Engine.register(clientPid, userName)
+    #IO.puts "registering client"
+    #IO.inspect clientPid |> elem(0)
+    Engine.register(clientPid |> elem(0), userName)
     {:reply, :registered, state}
   end
   #handle_cast to subscribe client to a user
@@ -21,6 +22,15 @@ defmodule Server do
     end)
     {:noreply, state}
   end
+
+  #
+  def handle_cast({:tweet_subscribers, tweetText, userName}, state) do
+    #IO.inspect :ets.lookup(:users, clientId)
+    ServerApi.tweetSubscribers(userName, tweetText)
+    ServerApi.tweetMentions(tweetText)
+    {:noreply, state}
+  end
+
   def handle_call(:getUsers, from, state) do
     userNames = Server.keys(:users)
     {:reply, userNames, state}
@@ -52,23 +62,12 @@ defmodule Server do
   end
 end
 
-
 defmodule Project4 do
+  use GenServer
   def main(args) do
     role = args
             |> parse_args
             |> Enum.at(0)
-
-    numClients = cond do
-      role == "client" ->
-        args
-        |> parse_args
-        |> Enum.at(1)
-        |> Integer.parse(10)
-        |> elem(0)
-      true ->
-        0
-    end
 
     cond do
       role == "server" ->
@@ -78,29 +77,29 @@ defmodule Project4 do
         state = {:running, indicator_r, indicator_w, sequenceNum}
         {:ok, pid} = GenServer.start(Server, state, name: :server)
         GenServer.call(:server, :start, :infinity)
-        #IO.inspect Process.alive?(pid)
-      role == "client" ->
-        state = :running
-        #Simulator.startClientNode
-        nodeName = "client@127.0.0.1"
-        Node.start String.to_atom(nodeName)
-        Node.set_cookie :twitter
-        Node.connect :"server@127.0.0.1"
-        {:ok, pid} = GenServer.start(Simulator, state, name: :simulator)
-        GenServer.cast(:simulator, numClients)
-        #{:ok, pid} = GenServer.start(Client, state)
-        #GenServer.call(pid, :register, :infinity)
-        #IO.inspect Process.alive?(pid)
-        #Client.start
-        #Client.subscribe
+      role == "simulator" ->
+        numClients = args
+                    |> parse_args
+                    |> Enum.at(1)
+                    |> Integer.parse(10)
+                    |> elem(0)
+        actorsPid = Simulator.start(numClients)
+        Simulator.subscribe(actorsPid)
+        Simulator.sendTweet(actorsPid)
       true ->
         true
     end
 
+    #send self, :checkAlive
+    #:timer.apply_interval(:timer.seconds(1), __MODULE__, :checkAlive, [])
     receive do
       :test ->
         IO.puts "test"
     end
+  end
+
+  def checkAlive do
+    IO.inspect Node.alive?
   end
 
   #parsing the input argument
