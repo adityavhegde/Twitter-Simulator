@@ -84,11 +84,4 @@ defmodule EngineTest do
 
     assert Engine.getTweets(pid) == [[2, tweetText2], [1, tweetText1]]
   end
-  #-----------------------------------------------------------------------------
-  # Test util functions
-  test "mention to pid conversion" do
-    mention = "<0.99.0>"
-    assert EngineUtils.mentionToPid(mention) |> :erlang.is_pid == true
-  end
-
 end

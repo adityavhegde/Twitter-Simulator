@@ -78,7 +78,7 @@ defmodule Engine do
     :ets.insert(:tweets, {clientPid, tweet})
 
     # insertion into the hashtag table
-    ServerApiUtils.excrateFromTweet(tweetText, 0, "#")
+    EngineUtils.excrateFromTweet(tweetText, 0, "#")
       |> Enum.each(fn(hashtag) ->
           tweet = cond do
             :ets.member(:hashtag, hashtag) ->
@@ -90,7 +90,7 @@ defmodule Engine do
       end)
 
     # insertion into the userMentions table
-    ServerApiUtils.excrateFromTweet(tweetText, 0, "@")
+    EngineUtils.excrateFromTweet(tweetText, 0, "@")
       |> Enum.each(fn(mention)->
         mention = EngineUtils.mentionToPid(mention)
         tweet = cond do
@@ -185,5 +185,37 @@ defmodule EngineUtils do
   @spec mentionToPid(String.t) :: pid
   def mentionToPid(mention) do
     :erlang.list_to_pid('#{mention}')
+  end
+
+  @doc """
+  Function to extract hashtags and mentions from a tweet
+    Eg: check test cases for how this works
+  """
+  @spec excrateFromTweet(String.t, integer, String.t) :: list
+  def excrateFromTweet(tweetText, index, htOrMention) do
+    cond do
+      String.length(tweetText) == 0 -> []
+      index == String.length(tweetText) - 1 -> []
+      String.at(tweetText, index) == htOrMention -> excrateFromTweet(tweetText, index+1, [], "", htOrMention)
+      true-> excrateFromTweet(tweetText, index+1, htOrMention)
+    end
+  end
+  @spec  excrateFromTweet(String.t, integer, list, String.t, String.t) :: list
+  def excrateFromTweet(tweetText, index, list, acc, htOrMention) do
+    cond do
+      index == String.length(tweetText) - 1 ->
+        cond do
+          String.at(tweetText, index) == htOrMention -> list ++ [String.trim(acc)]
+          true ->
+            acc = acc<>String.at(tweetText, index)
+            list ++ [String.trim(acc)]
+        end
+      String.at(tweetText, index) == htOrMention ->
+        list = list ++ [String.trim(acc)]
+        excrateFromTweet(tweetText, index+1, list, "", htOrMention)
+      true ->
+        acc = acc<>String.at(tweetText, index)
+        excrateFromTweet(tweetText, index+1, list, acc, htOrMention)
+    end
   end
 end

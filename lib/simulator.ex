@@ -18,15 +18,15 @@ defmodule Simulator do
       GenServer.call(clientPid, {:subscribe, usersToSub}, :infinity)
     end)
   end
-  
+
   #function to send tweets
   def sendTweet(actorsPid) do
     Enum.each(actorsPid, fn(client) ->
       mention = selectRandomMention(actorsPid, client)
-      tweetText = "tweet@"<>(:erlang.pid_to_list(mention) |> List.to_string)<>TwitterHelper.getHashtag
+      tweetText = "tweet@"<>(:erlang.pid_to_list(mention) |> List.to_string)<>getHashtag
       IO.inspect :ets.lookup(:usersSimulator, client)
-      :ets.lookup(:usersSimulator, client) 
-      |> Enum.at(0) 
+      :ets.lookup(:usersSimulator, client)
+      |> Enum.at(0)
       |> elem(1)
       |> Client.sendTweet(tweetText)
     end)
@@ -34,12 +34,22 @@ defmodule Simulator do
 
   def selectRandomMention(actorsPid, clientPid) do
     mention = Enum.random(actorsPid)
-    cond do 
+    cond do
       mention == clientPid ->
         selectRandomMention(actorsPid, clientPid)
       true ->
         mention
     end
+  end
+
+  def getHashtag do
+      hashList = ["#marketing", "#marketingtips", "#b2cmarketing",
+      "#b2bmarketing", "#strategy", "#mktg", "#digitalmarketing",
+      "#marketingstrategy", "#mobilemarketing", "#socialmediamarketing",
+      "#promotion", "#food", "#yummy", "#nom", "#hungry", "#cleaneating",
+      "#vegetarian", "#wine", "#sushi", "#birthday", "#red", "#workout",
+      "#sweet",  "#wedding", "#blackandwhite"]
+      Enum.random(hashList)
   end
 
   #function to spawn client actors
