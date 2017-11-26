@@ -26,12 +26,28 @@ defmodule Server do
     {:reply, userNames, state}
   end
   def handle_cast({:tweet_subscribers, tweetText, clientId}, state) do
+    state = ServerApi.write(state, clientId, tweetText)
     ServerApi.tweetSubscribers(clientId, tweetText)
     ServerApi.tweetMentions(tweetText)
     {:noreply, state}
   end
-  #TODO all the handle casts for search
+  def handle_cast({:search, clientId}, state) do
+    state = ServerApi.read(state, {:search, clientId})
+    {:noreply, state}
+  end
+  def handle_cast({:search_hashtag, clientId, hashtag_list}, state) do
+    state = ServerApi.read(state, {:search_hashtag, clientId, hashtag_list})
+    {:noreply, state}
+  end
+  def handle_cast({:search_mentions, clientId}, state) do
+    state = ServerApi.read(state, {:search_mentions, clientId})
+    {:noreply, state}
+  end
   def init(state) do
+    GenServer.start(ReadTweets, :running, name: :readActor1)
+    GenServer.start(ReadTweets, :running, name: :readActor2)
+    GenServer.start(WriteTweet, :running, name: :writeActor1)
+    GenServer.start(WriteTweet, :running, name: :writeActor2)
     {:ok, state}
   end
 end
@@ -56,7 +72,10 @@ defmodule Project4 do
 
     cond do
       role == "server" ->
-        state = :running
+        indicator_r = 0
+        indicator_w = 0
+        sequenceNum = 0
+        state = {:running, indicator_r, indicator_w, sequenceNum}
         {:ok, pid} = GenServer.start(Server, state, name: :server)
         GenServer.call(:server, :start, :infinity)
         #IO.inspect Process.alive?(pid)
