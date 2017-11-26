@@ -7,38 +7,52 @@ defmodule Engine do
         #IO.inspect {Node.self, Node.get_cookie}
     end
 
-    #function to initialize in-memory tables
     def initTables do
-        #initialize users table with user_id and username
-        :ets.new(:users, [:set, :protected, :named_table])
+        #initialize all tables. See moduledoc for details
+        :ets.new(:users, [:set, :public, :named_table])
+        :ets.new(:following, [:set, :public, :named_table])
+        :ets.new(:tweets, [:set, :public, :named_table])
+        :ets.new(:hashtag, [:set, :public, :named_table])
+        :ets.new(:userPid, [:set, :public, :named_table])
+        :ets.new(:userMentions, [:set, :public, :named_table])
     end
 
     #userName is client's PID
     def register(clientPid, userName) do
-        #IO.inspect userName
         :ets.insert_new(:users, {clientPid, userName, []})
+        #IO.inspect :ets.lookup(:users, clientPid)
     end
 
+    #def subscribe(userToSubPid, clientPid) do
+    #    IO.inspect :ets.lookup(:users, userToSubPid)
+    #end
     #subscribe to a user
-    def subscribe(userToSub, clientPid) do
-        IO.puts "here"
-        IO.inspect :ets.lookup(:users, userToSub)
-        [{userToSub, userPid, followers}] = :ets.lookup(:users, userToSub)
-        followers = followers ++ clientPid
-        :ets.insert(:users, {userToSub, userPid, followers})
-        IO.inspect :ets.lookup(:users, userToSub)
-    end
+    def subscribe(userToSubPid, clientPid) do
+        #IO.inspect [clientPid, "subscribing to", userToSubPid]
+        #IO.inspect :ets.lookup(:users, userToSubPid)
+        [{userToSubPid, userName, followers}] = :ets.lookup(:users, userToSubPid)
+        followers = followers ++ [clientPid]
+        :ets.insert(:users, {userToSubPid, userName, followers})
+        IO.inspect :ets.lookup(:users, clientPid)
 
-    #get keys of ets table
-    def keys(table_name) do
-        first_key = :ets.first(table_name)
-        keys(table_name, first_key, [first_key])
+        # also insert in the following table
+        listOfPeopleIFollow = cond do 
+            :ets.member(:following, clientPid) ->
+                [{_, listOfPeopleIFollow}] = :ets.lookup(:following, clientPid)
+                listOfPeopleIFollow ++ [userToSubPid]
+            true ->
+                [userToSubPid]
+        end
+        :ets.insert(:following, {clientPid, listOfPeopleIFollow})
+        #IO.inspect ["following", :ets.lookup(:following, clientPid)]
     end
-    def keys(_table_name, '$end_of_table', ['$end_of_table'|acc]) do
-        acc
-    end
-    def keys(table_name, current_key, acc) do
-        next_key = :ets.next(table_name, current_key)
-        keys(table_name, next_key, [next_key|acc])
+    
+  #----------------------------------------------------------------------------
+  # Below: functions that only read from database
+  # Do not add write functions
+    @spec getFollowers(pid) :: list
+    def getFollowers(userPid) do
+        #IO.inspect :ets.lookup(:users, userPid)
+        :ets.lookup(:users, userPid) |> Enum.at(0) |> elem(2)
     end
 end
