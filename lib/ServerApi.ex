@@ -16,13 +16,16 @@ defmodule ServerApi do
   @doc """
   Sends a tweet to all the followers of a user
   """
-  def tweetSubscribers(userName, tweetText) do
+  def tweetSubscribers(userPid, tweetText) do
     #TODO send only to users that are connected
     #get client id for given username, get its followers, and send them the tweets
-    Engine.getPid(userName)
+    IO.puts "server sending tweets to clients"
+    #IO.inspect userPid
+    #|> Engine.getFollowers()
+    userPid
     |> Engine.getFollowers()
     |> Enum.each(fn(pid) ->
-      GenServer.cast(pid, tweetText)
+      GenServer.cast(pid, {:receiveTweet, tweetText})
     end)
   end
 
@@ -30,8 +33,16 @@ defmodule ServerApi do
   Sends a tweet to all the mentions in a tweet
   """
   def tweetMentions(tweetText) do
-    tweetText |> EngineUtils.extractFromTweet(0, [], "@") |> Enum.each(fn(userName) ->
-      userName |> Engine.getPid() |> GenServer.cast(tweetText)
+    IO.inspect tweetText
+    |> EngineUtils.excrateFromTweet(0, "@")
+    tweetText
+    |> EngineUtils.excrateFromTweet(0, "@")
+    |> Enum.each(fn(userName) ->
+      check = userName
+      |> Engine.getPid()
+      IO.inspect check
+      IO.inspect :ets.lookup(:users, check)
+      #|> GenServer.cast({:receiveTweet, tweetText})
     end)
   end
 
@@ -42,6 +53,7 @@ defmodule ServerApi do
   Helper function used to distribute writes among the 2 Write Actors
   """
   def write(state, clientId, tweetText) do
+    IO.puts "writing tweets to server"
     {_, indicator_r, indicator, sequenceNum} = state
      [indicator, sequenceNum] =
        cond do
