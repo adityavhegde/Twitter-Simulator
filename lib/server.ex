@@ -5,8 +5,12 @@ defmodule Server do
   use GenServer
 
   def init(state) do
-    GenServer.start(ReadTweets, :running, name: :readActor1)
-    GenServer.start(ReadTweets, :running, name: :readActor2)
+    Enum.each(0..100, fn(index)->
+      actorName = "readActor"<>Integer.to_string(index) |> String.to_atom()
+      GenServer.start(ReadTweets, :running, name: actorName)
+    end)
+    # GenServer.start(ReadTweets, :running, name: :readActor1)
+    # GenServer.start(ReadTweets, :running, name: :readActor2)
     GenServer.start(WriteTweet, :running, name: :writeActor1)
     GenServer.start(WriteTweet, :running, name: :writeActor2)
     {:ok, state}
@@ -37,7 +41,7 @@ defmodule Server do
   # Write and send tweets to subscribers
   def handle_cast({:tweet_subscribers, tweetText, userName}, state) do
     clientId = Engine.getPid(userName)
-    #state = ServerApi.write(state, clientId, tweetText)
+    state = ServerApi.write(state, clientId, tweetText)
     ServerApi.tweetSubscribers(clientId, tweetText)
     ServerApi.tweetMentions(tweetText)
     {:noreply, state}
