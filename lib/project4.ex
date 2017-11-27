@@ -22,8 +22,9 @@ defmodule Project4 do
         actorsPid = Simulator.start(numClients)
         Simulator.subscribe(actorsPid)
         Simulator.sendTweet(actorsPid)
-        Simulator.searchTweets(actorsPid)
-        Simulator.searchMentions(actorsPid)
+        #Simulator.searchTweets(actorsPid)
+        #Simulator.searchMentions(actorsPid)
+        #Simulator.searchHashtags(actorsPid)
       true ->
         true
     end

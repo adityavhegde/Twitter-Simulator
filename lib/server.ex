@@ -37,7 +37,7 @@ defmodule Server do
   # Write and send tweets to subscribers
   def handle_cast({:tweet_subscribers, tweetText, userName}, state) do
     clientId = Engine.getPid(userName)
-    state = ServerApi.write(state, clientId, tweetText)
+    #state = ServerApi.write(state, clientId, tweetText)
     ServerApi.tweetSubscribers(clientId, tweetText)
     ServerApi.tweetMentions(tweetText)
     {:noreply, state}

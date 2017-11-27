@@ -1,10 +1,12 @@
 defmodule Client do
   use GenServer
-  def sendTweet(clientUserName, tweetText) do
+  @interval 1
+  #def sendTweet(clientUserName, tweetText) do
     # gets a send tweet request
     # send tweetMessage to server
-    GenServer.cast({:server, :"server@127.0.0.1"}, {:tweet_subscribers, tweetText, clientUserName})
-  end
+  #  GenServer.cast({:server, :"server@127.0.0.1"}, {:tweet_subscribers, tweetText, clientUserName})
+  #end
+  
 
   def retweet do
     # receive a tweet
@@ -39,9 +41,15 @@ defmodule Client do
     {:noreply, state}
   end
 
-  def handle_cast({:tweet_subscribers, tweetText, userName}, state) do
-    IO.puts "client tweeting"
+  #def handle_cast({:tweet_subscribers, tweetText, userName}, state) do
+  #  IO.puts "client tweeting"
+  #  GenServer.cast({:server, :"server@127.0.0.1"}, {:tweet_subscribers, tweetText, userName})
+  #  {:noreply, state}
+  #end
+
+  def handle_info({:tweet_subscribers, tweetText, userName, client}, state) do
     GenServer.cast({:server, :"server@127.0.0.1"}, {:tweet_subscribers, tweetText, userName})
+    Process.send_after(client, {:tweet_subscribers, tweetText, userName, client}, @interval)
     {:noreply, state}
   end
 

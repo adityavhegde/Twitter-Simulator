@@ -31,7 +31,8 @@ defmodule Simulator do
       tweetText = "tweet@"<>mention<>getHashtag()
       #IO.inspect :ets.lookup(:usersSimulator, client)
       userName = Simulator.getUsername(client)
-      GenServer.cast(client, {:tweet_subscribers, tweetText, userName})
+      send client, {:tweet_subscribers, tweetText, userName, client}
+      #GenServer.cast(client, {:tweet_subscribers, tweetText, userName})
     end)
   end
 
