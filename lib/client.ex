@@ -96,7 +96,6 @@ defmodule Client do
     {:noreply, state}
   end
 
-  
   def init(state) do
     {:ok, state}
   end

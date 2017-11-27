@@ -26,7 +26,7 @@ defmodule Simulator do
   #function to send tweets
   def sendTweet(actorsPid) do
     Enum.each(actorsPid, fn(client) ->
-      mention = selectRandomMention(actorsPid, client) 
+      mention = selectRandomMention(actorsPid, client)
                 |> Simulator.getUsername
       tweetText = "tweet@"<>mention<>getHashtag()
       #IO.inspect :ets.lookup(:usersSimulator, client)

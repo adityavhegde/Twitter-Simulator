@@ -33,13 +33,13 @@ defmodule ServerApi do
   Sends a tweet to all the mentions in a tweet
   """
   def tweetMentions(tweetText) do
-    IO.inspect tweetText 
+    IO.inspect tweetText
     |> EngineUtils.excrateFromTweet(0, "@")
-    tweetText 
-    |> EngineUtils.excrateFromTweet(0, "@") 
+    tweetText
+    |> EngineUtils.excrateFromTweet(0, "@")
     |> Enum.each(fn(userName) ->
-      check = userName 
-      |> Engine.getPid() 
+      check = userName
+      |> Engine.getPid()
       IO.inspect check
       IO.inspect :ets.lookup(:users, check)
       #|> GenServer.cast({:receiveTweet, tweetText})
