@@ -74,41 +74,36 @@ defmodule ServerApi do
   """
   def read(state, {:search, clientId}) do
     {_, indicator_r, indicator_w, sequenceNum} = state
-    indicator_r
-     = cond do
-      indicator_r == 0 ->
-        GenServer.cast(:readActor1, {:search, clientId})
-        1
-      true ->
-        GenServer.cast(:readActor2, {:search, clientId})
-        0
-    end
+    indicator_r = rem((indicator_r + 1), 100)
+    actorToCall = "readActor"<>Integer.to_string(indicator_r) |> String.to_atom()
+
+    GenServer.cast(actorToCall, {:search, clientId})
+
     {:running, indicator_r, indicator_w, sequenceNum}
   end
   def read(state, {:search_hashtag, clientId, hashtag_list}) do
     {_, indicator_r, indicator_w, sequenceNum} = state
-    indicator_r
-     = cond do
-      indicator_r == 0 ->
-        GenServer.cast(:readActor1, {:search_hashtag, clientId, hashtag_list})
-        1
-      true ->
-        GenServer.cast(:readActor2, {:search_hashtag, clientId, hashtag_list})
-        0
-    end
+    indicator_r = rem((indicator_r + 1), 100)
+    actorToCall = "readActor"<>Integer.to_string(indicator_r) |> String.to_atom()
+
+    GenServer.cast(actorToCall, {:search_hashtag, clientId, hashtag_list})
+
     {:running, indicator_r, indicator_w, sequenceNum}
   end
   def read(state, {:search_mentions, clientId}) do
     {_, indicator_r, indicator_w, sequenceNum} = state
-    indicator_r
-     = cond do
-      indicator_r == 0 ->
-        GenServer.cast(:readActor1, {:search_mentions, clientId})
-        1
-      true ->
-        GenServer.cast(:readActor2, {:search_mentions, clientId})
-        0
-    end
+    indicator_r = rem((indicator_r + 1), 100)
+    actorToCall = "readActor"<>Integer.to_string(indicator_r) |> String.to_atom()
+    GenServer.cast(actorToCall, {:search_mentions, clientId})
+    # indicator_r
+    #  = cond do
+    #   indicator_r == 0 ->
+    #     GenServer.cast(:readActor1, {:search_mentions, clientId})
+    #     1
+    #   true ->
+    #     GenServer.cast(:readActor2, {:search_mentions, clientId})
+    #     0
+    # end
     {:running, indicator_r, indicator_w, sequenceNum}
   end
 end
