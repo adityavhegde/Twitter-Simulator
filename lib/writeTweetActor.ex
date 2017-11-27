@@ -13,6 +13,7 @@ defmodule WriteTweet do
   """
   def handle_cast({:write_tweet, clientId, tweetText, sequenceNum}, state) do
     Engine.writeTweet(clientId, tweetText, sequenceNum)
+    {:noreply, state}
   end
 
   def init(state) do

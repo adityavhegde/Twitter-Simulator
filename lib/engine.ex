@@ -92,7 +92,9 @@ defmodule Engine do
     # insertion into the userMentions table
     EngineUtils.extractFromTweet(tweetText, 0, [], "@")
       |> Enum.each(fn(mention)->
-        mention = EngineUtils.mentionToPid(mention)
+        mention = Engine.getPid(mention)
+        IO.inspect ["PIDs of mentions", mention]
+        #mention = EngineUtils.mentionToPid(mention)
         tweet = cond do
           :ets.member(:userMentions, mention) ->
             [{_, tweet_list}] = :ets.lookup(:userMentions, mention)
@@ -164,10 +166,14 @@ defmodule Engine do
   @spec getMentions(pid) :: list
   def getMentions(clientPid) do
     #TODO sorting tweets
-    [{_, tweet_list}] = :ets.lookup(:userMentions, clientPid)
-    tweet_list
+    cond do 
+        :ets.member(:userMentions, clientPid) ->
+            [{_, tweet_list}] = :ets.lookup(:userMentions, clientPid)
+            tweet_list
+        true -> []
+    end
   end
- end
+end
 
 defmodule EngineUtils do
   @moduledoc """

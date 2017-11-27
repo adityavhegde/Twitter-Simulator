@@ -34,9 +34,9 @@ defmodule ServerApi do
   """
   def tweetMentions(tweetText) do
     IO.inspect tweetText
-    |> EngineUtils.excrateFromTweet(0, "@")
+    |> EngineUtils.extractFromTweet(0, [], "@")
     tweetText
-    |> EngineUtils.excrateFromTweet(0, "@")
+    |> EngineUtils.extractFromTweet(0, [], "@")
     |> Enum.each(fn(userName) ->
       check = userName
       |> Engine.getPid()
