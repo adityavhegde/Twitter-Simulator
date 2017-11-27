@@ -47,6 +47,16 @@ defmodule Simulator do
   end
   
   @doc """
+  Asks client to get tweets of users subscribed to at a regular interval
+  """
+  def searchTweets(actorsPid, :interval) do
+    Enum.each(actorsPid, fn(client) ->
+      userName = Simulator.getUsername(client)
+      send client, {:search, userName, client}
+    end)
+  end
+  
+  @doc """
   Asks client to get tweets of random hashtags subscribed to
   """
   def searchHashtags(actorsPid) do
@@ -100,7 +110,8 @@ defmodule Simulator do
     actorsPid
   end
   def spawnClientActors(numClients, actorsPid) do
-    state = :spawned
+    #state = :spawned
+    state = 0
     nodeName = numClients |> Integer.to_string |> String.to_atom
     {:ok, clientPid} = GenServer.start(Client, state, name: nodeName)
     actorsPid = actorsPid ++ [clientPid]

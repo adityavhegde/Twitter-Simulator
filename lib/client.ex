@@ -49,7 +49,13 @@ defmodule Client do
 
   def handle_info({:tweet_subscribers, tweetText, userName, client}, state) do
     GenServer.cast({:server, :"server@127.0.0.1"}, {:tweet_subscribers, tweetText, userName})
-    Process.send_after(client, {:tweet_subscribers, tweetText, userName, client}, @interval)
+    state = state + 1
+    cond do 
+      state <= 100 ->
+        Process.send_after(client, {:tweet_subscribers, tweetText, userName, client}, @interval)
+      true ->
+        true
+    end
     {:noreply, state}
   end
 
@@ -57,6 +63,13 @@ defmodule Client do
   def handle_cast({:search, userName}, state) do
     IO.puts "client will ask server for tweets"
     GenServer.cast({:server, :"server@127.0.0.1"}, {:search, userName})
+    {:noreply, state}
+  end
+
+  def handle_info({:search, userName, client}, state) do
+    IO.puts "client will ask server regularly for tweets"
+    GenServer.cast({:server, :"server@127.0.0.1"}, {:search, userName})
+    Process.send_after(client, {:search, userName, client}, @interval)
     {:noreply, state}
   end
 
