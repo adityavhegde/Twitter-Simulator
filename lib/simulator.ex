@@ -44,6 +44,24 @@ defmodule Simulator do
       GenServer.cast(client, {:search, userName})
     end)
   end
+  
+  @doc """
+  Asks client to get tweets of random hashtags subscribed to
+  """
+  def searchHashtags(actorsPid) do
+    Enum.each(actorsPid, fn(client) ->
+      userName = Simulator.getUsername(client)
+      hashtag_list = Simulator.getHashtag()
+      GenServer.cast(client, {:search_hashtag, userName, hashtag_list})
+    end)
+  end
+
+  def searchMentions(actorsPid) do
+    Enum.each(actorsPid, fn(client) ->
+      userName = Simulator.getUsername(client)
+      GenServer.cast(client, {:search_mentions, userName})
+    end)
+  end
 
   @doc """
   Returns the username, given a pid

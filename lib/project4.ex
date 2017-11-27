@@ -23,6 +23,7 @@ defmodule Project4 do
         Simulator.subscribe(actorsPid)
         Simulator.sendTweet(actorsPid)
         Simulator.searchTweets(actorsPid)
+        Simulator.searchMentions(actorsPid)
       true ->
         true
     end
