@@ -166,7 +166,7 @@ defmodule Engine do
   @spec getMentions(pid) :: list
   def getMentions(clientPid) do
     #TODO sorting tweets
-    cond do 
+    cond do
         :ets.member(:userMentions, clientPid) ->
             [{_, tweet_list}] = :ets.lookup(:userMentions, clientPid)
             tweet_list

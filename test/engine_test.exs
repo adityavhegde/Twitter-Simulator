@@ -15,8 +15,8 @@ defmodule EngineTest do
     Engine.initTables()
     Engine.register(self(), "username")
 
-    mention = self() |> :erlang.pid_to_list() |> List.to_string()
-    tweetText1 = "This is a tweet #studentLife #elixir"<>"@"<>mention
+    #mention = self() |> :erlang.pid_to_list() |> List.to_string()
+    tweetText1 = "This is a tweet #studentLife #elixir @username"
     tweetText2 = "Tweet2 #studentLife"
     sequenceNum = 1
     pid = self()
@@ -74,8 +74,8 @@ defmodule EngineTest do
     Engine.initTables()
     Engine.register(self(), "username")
 
-    mention = self() |> :erlang.pid_to_list() |> List.to_string()
-    tweetText1 = "This is a tweet #studentLife #elixir"<>"@"<>mention
+    #mention = self() |> :erlang.pid_to_list() |> List.to_string()
+    tweetText1 = "This is a tweet #studentLife #elixir @username"
     tweetText2 = "Tweet2 #studentLife"
     sequenceNum = 1
     pid = self()
