@@ -25,20 +25,21 @@ defmodule Simulator do
   #function to send tweets
   def sendTweet(actorsPid) do
     Enum.each(actorsPid, fn(client) ->
-      mention = selectRandomMention(actorsPid, client) 
+      mention = selectRandomMention(actorsPid, client)
                 |> Simulator.getUsername
       tweetText = "tweet@"<>mention<>getHashtag
       #IO.inspect :ets.lookup(:usersSimulator, client)
       userName = Simulator.getUsername(client)
-      GenServer.cast(client, {:tweet_subscribers, tweetText, userName}})
+      GenServer.cast(client, {:tweet_subscribers, tweetText, userName})
     end)
   end
 
   @doc """
   Asks client to get tweets of users subscribed to
   """
-  def searchTweet(actorsPid) do
+  def searchTweets(actorsPid) do
     Enum.each(actorsPid, fn(client) ->
+      userName = Simulator.getUsername(client)
       GenServer.cast(client, {:search, userName})
     end)
   end

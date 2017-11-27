@@ -30,7 +30,7 @@ defmodule ServerApi do
   Sends a tweet to all the mentions in a tweet
   """
   def tweetMentions(tweetText) do
-    tweetText |> EngineUtils.excrateFromTweet(0, "@") |> Enum.each(fn(userName) ->
+    tweetText |> EngineUtils.extractFromTweet(0, [], "@") |> Enum.each(fn(userName) ->
       userName |> Engine.getPid() |> GenServer.cast(tweetText)
     end)
   end

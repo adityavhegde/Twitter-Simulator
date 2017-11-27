@@ -48,7 +48,7 @@ defmodule Client do
     GenServer.call({:server, :"server@127.0.0.1"}, {:register, userName}, :infinity)
   end
 
-#---------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #GenServer callbacks for the client
 
   def handle_call({:register, userName}, _, state) do
@@ -76,7 +76,7 @@ defmodule Client do
   def handle_cast({:search_result, tweetText}) do
     IO.puts tweetText
   end
-  
+
 
   def init(state) do
     {:ok, state}
