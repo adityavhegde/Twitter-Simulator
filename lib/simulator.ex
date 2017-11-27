@@ -12,11 +12,12 @@ defmodule Simulator do
     actorsPid = spawnClientActors(numClients, [])
   end
 
+  #subscribe users to random users
   def subscribe(actorsPid) do
     Enum.each(actorsPid, fn(clientPid) ->
       usersToSub = Enum.take_random(actorsPid--[clientPid], 5)
       usernamesToSub = Enum.map(usersToSub, fn(userPids) ->
-        Simulator.getUsername(usersToSub)
+        Simulator.getUsername(userPids)
       end)
       GenServer.cast(clientPid, {:subscribe, usernamesToSub})
     end)
@@ -27,18 +28,19 @@ defmodule Simulator do
     Enum.each(actorsPid, fn(client) ->
       mention = selectRandomMention(actorsPid, client) 
                 |> Simulator.getUsername
-      tweetText = "tweet@"<>mention<>getHashtag
+      tweetText = "tweet@"<>mention<>getHashtag()
       #IO.inspect :ets.lookup(:usersSimulator, client)
       userName = Simulator.getUsername(client)
-      GenServer.cast(client, {:tweet_subscribers, tweetText, userName}})
+      GenServer.cast(client, {:tweet_subscribers, tweetText, userName})
     end)
   end
 
   @doc """
   Asks client to get tweets of users subscribed to
   """
-  def searchTweet(actorsPid) do
+  def searchTweets(actorsPid) do
     Enum.each(actorsPid, fn(client) ->
+      userName = Simulator.getUsername(client)
       GenServer.cast(client, {:search, userName})
     end)
   end
@@ -48,6 +50,8 @@ defmodule Simulator do
   """
   @spec getUsername(pid) :: String.t
   def getUsername(pid) do
+    #IO.inspect pid
+    #IO.inspect :ets.lookup(:usersSimulator, pid)
     [{_, userName, _}] = :ets.lookup(:usersSimulator, pid)
     userName
   end
@@ -86,7 +90,9 @@ defmodule Simulator do
     userName = :md5
               |> :crypto.hash(Kernel.inspect(clientPid))
               |> Base.encode16()
+    #IO.inspect clientPid
     :ets.insert_new(:usersSimulator, {clientPid, userName, []})
+
     #IO.inspect :ets.lookup(:usersSimulator, clientPid)
 
     GenServer.call(clientPid, {:register, userName}, :infinity)

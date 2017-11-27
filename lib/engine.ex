@@ -57,7 +57,7 @@ defmodule Engine do
     toFollow = cond do
       :ets.member(:following, clientPid) ->
         [{_, listOfPeopleIFollow}] = :ets.lookup(:following, clientPid)
-        listOfPeopleIFollow = listOfPeopleIFollow ++ [userToSubPid]
+        listOfPeopleIFollow ++ [userToSubPid]
       true -> [userToSubPid]
     end
     :ets.insert(:following, {clientPid, toFollow})
