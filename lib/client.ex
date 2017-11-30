@@ -36,7 +36,7 @@ defmodule Client do
 
   #tell a client PID to subscribe to a list of users' PIDs
   def handle_cast({:subscribe, usernamesToSub}, state) do
-    IO.puts "subscribing"
+    #IO.puts "subscribing"
     Client.subscribeUsers(usernamesToSub)
     {:noreply, state}
   end
@@ -48,6 +48,7 @@ defmodule Client do
   #end
 
   def handle_info({:tweet_subscribers, tweetText, userName, client}, state) do
+    IO.puts "server receiving tweets"
     GenServer.cast({:server, :"server@127.0.0.1"}, {:tweet_subscribers, tweetText, userName})
     state = state + 1
     cond do 
@@ -111,7 +112,7 @@ defmodule Client do
   end
 
   #GenServer.callback to receive tweets with hashtags queried for
-  def handle_cast(  {:search_result_mention, tweetText}, state) do
+  def handle_cast({:search_result_mention, tweetText}, state) do
     IO.puts "receiving tweets where client is mentioned"
     IO.puts tweetText
     {:noreply, state}

@@ -93,7 +93,7 @@ defmodule Engine do
     EngineUtils.extractFromTweet(tweetText, 0, [], "@")
       |> Enum.each(fn(mention)->
         mention = Engine.getPid(mention)
-        IO.inspect ["PIDs of mentions", mention]
+        #IO.inspect ["PIDs of mentions", mention]
         #mention = EngineUtils.mentionToPid(mention)
         tweet = cond do
           :ets.member(:userMentions, mention) ->

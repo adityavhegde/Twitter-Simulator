@@ -60,6 +60,7 @@ defmodule Server do
     {:noreply, state}
   end
   def handle_cast({:search_mentions, userName}, state) do
+    IO.puts "searching for mentions"
     clientId = Engine.getPid(userName)
     state = ServerApi.read(state, {:search_mentions, clientId})
     {:noreply, state}

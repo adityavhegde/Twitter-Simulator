@@ -13,18 +13,46 @@ defmodule Simulator do
   end
 
   #subscribe users to random users
+  #def subscribe(actorsPid) do
+  #  Enum.each(actorsPid, fn(clientPid) ->
+  #    usersToSub = Enum.take_random(actorsPid--[clientPid], 5)
+  #    usernamesToSub = Enum.map(usersToSub, fn(userPids) ->
+  #      Simulator.getUsername(userPids)
+  #    end)
+  #    GenServer.cast(clientPid, {:subscribe, usernamesToSub})
+  #  end)
+  #end
+
   def subscribe(actorsPid) do
-    Enum.each(actorsPid, fn(clientPid) ->
-      usersToSub = Enum.take_random(actorsPid--[clientPid], 5)
-      usernamesToSub = Enum.map(usersToSub, fn(userPids) ->
-        Simulator.getUsername(userPids)
-      end)
-      GenServer.cast(clientPid, {:subscribe, usernamesToSub})
+    usersCount = length(actorsPid)
+    mostSubscribers = usersCount-1
+    factor = 1
+    subscribe(actorsPid, usersCount-1, mostSubscribers, factor)
+  end
+  def subscribe(_, -1, _, _) do
+    true
+  end
+  def subscribe(actorsPid, index, mostSubscribers, factor) do
+    clientPid = Enum.at(actorsPid, index)
+    numSubscribers = (mostSubscribers/factor) |> round
+    numSubscribers = cond do 
+      numSubscribers == 0 ->
+        1
+      true ->
+        numSubscribers
+    end
+    #IO.inspect ["no. of users subscribed", numSubscribers]
+    usersToSub = Enum.take_random(actorsPid--[clientPid], numSubscribers)
+    usernamesToSub = Enum.map(usersToSub, fn(userPids) ->
+      Simulator.getUsername(userPids)
     end)
+    GenServer.cast(clientPid, {:subscribe, usernamesToSub})
+    subscribe(actorsPid, index-1, mostSubscribers, factor+1)
   end
 
   #function to send tweets
   def sendTweet(actorsPid) do
+    IO.puts "sending tweets"
     Enum.each(actorsPid, fn(client) ->
       mention = selectRandomMention(actorsPid, client)
                 |> Simulator.getUsername
