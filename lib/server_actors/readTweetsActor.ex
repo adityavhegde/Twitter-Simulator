@@ -25,8 +25,11 @@ defmodule ReadTweets do
   This method sends a timeline of tweets that contain specific hashtags
   """
   def handle_cast({:search_hashtag, clientId, hashtag_list}, state) do
+    #IO.inspect hashtag_list
     Enum.each(hashtag_list, fn(hashtag)->
-      Engine.getTweetsHavingHashtag(hashtag) |> Enum.each(fn(tweet) ->
+      String.replace(hashtag, "#", "") 
+      |> Engine.getTweetsHavingHashtag 
+      |> Enum.each(fn(tweet) ->
         # tweet -> [tweet_id, tweetText]
         # TODO turns into just a list of tweetTexts after sorting
         GenServer.cast(clientId, {:search_result_ht, Enum.at(tweet, 1)})

@@ -23,11 +23,15 @@ defmodule Simulator do
   #  end)
   #end
 
+  @doc """
+  gets a list of users who will FOLLOW a client, 
+  and gives the client a list of the users who will follow it.
+  """
   def subscribe(actorsPid) do
-    usersCount = length(actorsPid)
-    mostSubscribers = usersCount-1
+    numUsers = length(actorsPid)
+    mostSubscribers = numUsers-1
     factor = 1
-    subscribe(actorsPid, usersCount-1, mostSubscribers, factor)
+    subscribe(actorsPid, numUsers-1, mostSubscribers, factor)
   end
   def subscribe(_, -1, _, _) do
     true
@@ -41,25 +45,34 @@ defmodule Simulator do
       true ->
         numSubscribers
     end
-    #IO.inspect ["no. of users subscribed", numSubscribers]
     usersToSub = Enum.take_random(actorsPid--[clientPid], numSubscribers)
     usernamesToSub = Enum.map(usersToSub, fn(userPids) ->
       Simulator.getUsername(userPids)
     end)
+
+    [{_, userName, followers}] = :ets.lookup(:usersSimulator, clientPid)
+    followers = followers ++ usersToSub
+    :ets.insert(:usersSimulator, {clientPid, userName, followers})
+    
     GenServer.cast(clientPid, {:subscribe, usernamesToSub})
     subscribe(actorsPid, index-1, mostSubscribers, factor+1)
   end
 
   #function to send tweets
-  def sendTweet(actorsPid) do
+  def sendTweet(actorsPid, minInterval) do
     IO.puts "sending tweets"
+    numUsers = length(actorsPid)
     Enum.each(actorsPid, fn(client) ->
       mention = selectRandomMention(actorsPid, client)
                 |> Simulator.getUsername
       tweetText = "tweet@"<>mention<>getHashtag()
-      #IO.inspect :ets.lookup(:usersSimulator, client)
+      
+      [{_, _, subscribers}] = :ets.lookup(:usersSimulator, client)
+      numSubscribers = length(subscribers)
+      interval = (numUsers/numSubscribers |> round) * minInterval
+
       userName = Simulator.getUsername(client)
-      send client, {:tweet_subscribers, tweetText, userName, client}
+      send client, {:tweet_subscribers, tweetText, userName, client, interval}
       #GenServer.cast(client, {:tweet_subscribers, tweetText, userName})
     end)
   end
@@ -88,9 +101,10 @@ defmodule Simulator do
   Asks client to get tweets of random hashtags subscribed to
   """
   def searchHashtags(actorsPid) do
+    #IO.puts "searching for hashtags"
     Enum.each(actorsPid, fn(client) ->
       userName = Simulator.getUsername(client)
-      hashtag_list = Simulator.getHashtag()
+      hashtag_list = [Simulator.getHashtag()]
       GenServer.cast(client, {:search_hashtag, userName, hashtag_list})
     end)
   end

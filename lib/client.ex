@@ -47,13 +47,13 @@ defmodule Client do
   #  {:noreply, state}
   #end
 
-  def handle_info({:tweet_subscribers, tweetText, userName, client}, state) do
-    IO.puts "server receiving tweets"
+  def handle_info({:tweet_subscribers, tweetText, userName, client, interval}, state) do
+    #IO.puts "server receiving tweets"
     GenServer.cast({:server, :"server@127.0.0.1"}, {:tweet_subscribers, tweetText, userName})
     state = state + 1
     cond do 
       state <= 100 ->
-        Process.send_after(client, {:tweet_subscribers, tweetText, userName, client}, @interval)
+        Process.send_after(client, {:tweet_subscribers, tweetText, userName, client, interval}, interval)
       true ->
         true
     end
@@ -76,7 +76,7 @@ defmodule Client do
 
 #GenServer callback to query for tweets with given hashtags
   def handle_cast({:search_hashtag, userName, hashtag_list}, state) do
-    IO.puts "client will ask for hashtags"
+    #IO.puts "client will ask for hashtags"
     GenServer.cast({:server, :"server@127.0.0.1"}, {:search_hashtag, userName, hashtag_list})
     {:noreply, state}
   end
@@ -92,8 +92,8 @@ defmodule Client do
 
   #GenServer.callback to receive tweets when users you have subscribed to tweets something
   def handle_cast({:receiveTweet, tweetText}, state) do
-    IO.puts "receiving tweets"
-    IO.puts tweetText
+    #IO.puts "receiving tweets"
+    #IO.puts tweetText
     {:noreply, state}
   end
 

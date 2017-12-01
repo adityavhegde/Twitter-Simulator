@@ -21,8 +21,10 @@ defmodule Project4 do
                     |> elem(0)
         actorsPid = Simulator.start(numClients)
         Simulator.subscribe(actorsPid)
-        Simulator.sendTweet(actorsPid)
-        Simulator.searchTweets(actorsPid, :interval)
+
+        minInterval = 20
+        Simulator.sendTweet(actorsPid, minInterval)
+        #Simulator.searchTweets(actorsPid, :interval)
         #Simulator.searchMentions(actorsPid)
         #Simulator.searchHashtags(actorsPid)
       true ->

@@ -142,8 +142,12 @@ defmodule Engine do
   @spec getTweets(pid) :: list
   def getTweets(clientPid) do
     #TODO sort tweets based on sequence number in descending order
-    [{_, tweet_list}]= :ets.lookup(:tweets, clientPid)
-    tweet_list
+    cond do
+      :ets.member(:tweets, clientPid) ->
+        [{_, tweet_list}]= :ets.lookup(:tweets, clientPid)
+        tweet_list
+      true -> []
+    end
   end
 
   @doc """
@@ -155,9 +159,14 @@ defmodule Engine do
   """
   @spec getTweetsHavingHashtag(String.t) :: list
   def getTweetsHavingHashtag(hashtag) do
+    #IO.inspect hashtag
     #TODO do the sorting of tweets
-    [{_, tweet_list}] = :ets.lookup(:hashtag, hashtag)
-    tweet_list
+    cond do 
+      :ets.member(:hashtag, hashtag) ->
+        [{_, tweet_list}] = :ets.lookup(:hashtag, hashtag)
+        tweet_list
+      true -> []
+    end
   end
 
   @doc """

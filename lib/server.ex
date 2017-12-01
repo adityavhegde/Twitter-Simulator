@@ -33,7 +33,7 @@ defmodule Server do
     # usersToSub is a list of pid's
     usersToSub |> Enum.each(fn(userName)->
       userPid = Engine.getPid(userName)
-      Engine.subscribe(userPid, clientPid)
+      Engine.subscribe(clientPid, userPid)
     end)
     {:reply, {:subscribed}, state}
   end
@@ -49,7 +49,7 @@ defmodule Server do
   #-----------------------------------------------------------------------------
   # Handle search requests by clients
   def handle_cast({:search, userName}, state) do
-    IO.puts "searching for tweets"
+    #IO.puts "searching for tweets"
     clientId = Engine.getPid(userName)
     state = ServerApi.read(state, {:search, clientId})
     {:noreply, state}
@@ -60,7 +60,7 @@ defmodule Server do
     {:noreply, state}
   end
   def handle_cast({:search_mentions, userName}, state) do
-    IO.puts "searching for mentions"
+    #IO.puts "searching for mentions"
     clientId = Engine.getPid(userName)
     state = ServerApi.read(state, {:search_mentions, clientId})
     {:noreply, state}

@@ -19,7 +19,7 @@ defmodule ServerApi do
   def tweetSubscribers(userPid, tweetText) do
     #TODO send only to users that are connected
     #get client id for given username, get its followers, and send them the tweets
-    IO.puts "server sending tweets to clients"
+    #IO.puts "server sending tweets to clients"
     #IO.inspect userPid
     #|> Engine.getFollowers()
     userPid
@@ -36,11 +36,9 @@ defmodule ServerApi do
     tweetText
     |> EngineUtils.extractFromTweet(0, [], "@")
     |> Enum.each(fn(userName) ->
-      check = userName
+      userName
       |> Engine.getPid()
-      #IO.inspect check
-      #IO.inspect :ets.lookup(:users, check)
-      #|> GenServer.cast({:receiveTweet, tweetText})
+      |> GenServer.cast({:receiveTweet, tweetText})
     end)
   end
 
@@ -51,7 +49,7 @@ defmodule ServerApi do
   Helper function used to distribute writes among the 2 Write Actors
   """
   def write(state, clientId, tweetText) do
-    IO.puts "writing tweets to server"
+    #IO.puts "writing tweets to server"
     {_, indicator_r, indicator, sequenceNum} = state
      [indicator, sequenceNum] =
        cond do
@@ -93,15 +91,6 @@ defmodule ServerApi do
     indicator_r = rem((indicator_r + 1), 100)
     actorToCall = "readActor"<>Integer.to_string(indicator_r) |> String.to_atom()
     GenServer.cast(actorToCall, {:search_mentions, clientId})
-    # indicator_r
-    #  = cond do
-    #   indicator_r == 0 ->
-    #     GenServer.cast(:readActor1, {:search_mentions, clientId})
-    #     1
-    #   true ->
-    #     GenServer.cast(:readActor2, {:search_mentions, clientId})
-    #     0
-    # end
     {:running, indicator_r, indicator_w, sequenceNum}
   end
 end
