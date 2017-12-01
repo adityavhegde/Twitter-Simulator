@@ -58,8 +58,12 @@ defmodule Simulator do
     subscribe(actorsPid, index-1, mostSubscribers, factor+1)
   end
 
-  #function to send tweets
-  def sendTweet(actorsPid, minInterval) do
+  @doc """
+  If action is :tweet_subscribers, the clients send tweets
+  If action is :complete_simulation, the clients send tweets,
+  search for tweets, search for hashtags, and search for mentions, randomly
+  """
+  def sendTweet(actorsPid, minInterval, action) do
     IO.puts "sending tweets"
     numUsers = length(actorsPid)
     Enum.each(actorsPid, fn(client) ->
@@ -72,7 +76,7 @@ defmodule Simulator do
       interval = (numUsers/numSubscribers |> round) * minInterval
 
       userName = Simulator.getUsername(client)
-      send client, {:tweet_subscribers, tweetText, userName, client, interval}
+      send client, {action, tweetText, userName, client, interval}
       #GenServer.cast(client, {:tweet_subscribers, tweetText, userName})
     end)
   end

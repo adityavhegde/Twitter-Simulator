@@ -52,7 +52,7 @@ defmodule Client do
     GenServer.cast({:server, :"server@127.0.0.1"}, {:tweet_subscribers, tweetText, userName})
     state = state + 1
     cond do 
-      state <= 100 ->
+      state <= 1000 ->
         Process.send_after(client, {:tweet_subscribers, tweetText, userName, client, interval}, interval)
       true ->
         true
@@ -87,6 +87,38 @@ defmodule Client do
     GenServer.cast({:server, :"server@127.0.0.1"}, {:search_mentions, userName})
     {:noreply, state}
   end
+
+  @doc """
+  handle to run complete simulation. This includes sending tweets,
+  randomly searching for mentions, tweets of users subscribed to, or
+  mentions
+  """
+  def handle_info({:complete_simulation, tweetText, userName, client, interval}, state) do
+    GenServer.cast({:server, :"server@127.0.0.1"}, {:tweet_subscribers, tweetText, userName})
+    state = state + 1
+    cond do 
+      rem(state, 1000) == 0 ->
+        runBehaviour = Enum.random([:search, :search_hashtag, :search_mentions])
+        case runBehaviour do
+          :search ->
+            IO.puts "client querying for tweets"
+            GenServer.cast({:server, :"server@127.0.0.1"}, {:search, userName})
+          :search_hashtag ->
+            IO.puts "client querying for hashtags"
+            hashtag_list = [Simulator.getHashtag]
+            GenServer.cast({:server, :"server@127.0.0.1"}, {:search_hashtag, userName, hashtag_list})
+          :search_mentions ->
+            "clients querying for mentions"
+            GenServer.cast({:server, :"server@127.0.0.1"}, {:search_mentions, userName})
+          _ ->
+            true
+        end
+      true ->
+        Process.send_after(client, {:complete_simulation, tweetText, userName, client, interval}, interval)
+    end
+    {:noreply, state}
+  end
+
 #---------------------------------------------------
 #GenServer Callbacks from server below this
 

@@ -22,11 +22,12 @@ defmodule Project4 do
         actorsPid = Simulator.start(numClients)
         Simulator.subscribe(actorsPid)
 
-        minInterval = 20
-        Simulator.sendTweet(actorsPid, minInterval)
+        minInterval = 1
+        #Simulator.sendTweet(actorsPid, minInterval, :tweet_subscribers)
         #Simulator.searchTweets(actorsPid, :interval)
         #Simulator.searchMentions(actorsPid)
         #Simulator.searchHashtags(actorsPid)
+        Simulator.sendTweet(actorsPid, minInterval, :complete_simulation)
       true ->
         true
     end
