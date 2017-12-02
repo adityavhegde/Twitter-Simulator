@@ -9,6 +9,16 @@ defmodule EngineTest do
     Engine.register(self(), "username")
     assert :ets.lookup(:users, self()) |> Enum.at(0) == {self(), "username", []}
     assert :ets.lookup(:userPid, "username") |> Enum.at(0) == {"username", self()}
+    assert Engine.isLoggedIn(self()) == true
+  end
+
+  # Test write functions
+  test "login and logout of users" do
+    Engine.initTables()
+    Engine.register(self(), "username")
+    assert Engine.isLoggedIn(self()) == true
+    Engine.logout(self())
+    assert Engine.isLoggedIn(self()) == false
   end
 
   test "test1: writes a tweet and also creates entry in hashtag and mentions table" do

@@ -12,6 +12,8 @@ defmodule Engine do
   userPid - username (key), pid | mapping of username and pid
   userMentions - user_id (key), [[tweet_id, tweetText]]
            A list of tweets where a user is mentioned
+  loggedInUsers - userId, logged_in flag
+          logged_in if true = user is logged in else user is logged out
 
   Types -
   user_id: pid
@@ -28,16 +30,18 @@ defmodule Engine do
     #initialize all tables. See moduledoc for details
     :ets.new(:users, [:set, :public, :named_table])
     :ets.new(:following, [:set, :public, :named_table])
-    :ets.new(:tweets, [:set, :public, :named_table])
-    :ets.new(:hashtag, [:set, :public, :named_table])
+    :ets.new(:tweets, [:set, :public, :named_table, {:read_concurrency, true}, {:write_concurrency, true}])
+    :ets.new(:hashtag, [:set, :public, :named_table, {:read_concurrency, true}, {:write_concurrency, true}])
     :ets.new(:userPid, [:set, :public, :named_table])
-    :ets.new(:userMentions, [:set, :public, :named_table])
+    :ets.new(:userMentions, [:set, :public, :named_table, {:read_concurrency, true}, {:write_concurrency, true}])
+    :ets.new(:loggedInUsers, [:set, :public, :named_table])
   end
 
   #userName is client's PID
   def register(clientPid, userName) do
     :ets.insert_new(:users, {clientPid, userName, []})
     :ets.insert_new(:userPid, {userName, clientPid})
+    :ets.insert_new(:loggedInUsers, {clientPid, :true})
   end
 
   @doc """
@@ -103,6 +107,20 @@ defmodule Engine do
         end
         :ets.insert(:userMentions, {mention, tweet})
     end)
+  end
+
+  @doc """
+  LOGIN a client
+  """
+  def login(clientPid) do
+    :ets.insert(:loggedInUsers, {clientPid, :true})
+  end
+
+  @doc """
+  LOGOUT a client
+  """
+  def logout(clientPid) do
+    :ets.insert(:loggedInUsers, {clientPid, :false})
   end
 
   #----------------------------------------------------------------------------
@@ -181,6 +199,15 @@ defmodule Engine do
             tweet_list
         true -> []
     end
+  end
+
+  @doc """
+  Returns true if a user is logged in, else false
+  Eg: isLoggedIn(self()) will return true or false
+  """
+  def isLoggedIn(clientPid) do
+    [{_, flag}] = :ets.lookup(:loggedInUsers, clientPid)
+    flag == :true
   end
 end
 

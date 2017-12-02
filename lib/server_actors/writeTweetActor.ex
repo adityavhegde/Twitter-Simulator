@@ -16,7 +16,8 @@ defmodule WriteTweet do
     #IO.inspect sequenceNum
     cond do
       rem(sequenceNum, 1000) == 0 ->
-         IO.inspect [sequenceNum, DateTime.utc_now]#:os.system_time(:milli_seconds)]
+        true
+         #IO.inspect [sequenceNum, DateTime.utc_now]#:os.system_time(:milli_seconds)]
       true ->
         true
     end

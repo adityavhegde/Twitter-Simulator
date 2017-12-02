@@ -10,7 +10,8 @@ defmodule Project4 do
         indicator_r = 0
         indicator_w = 0
         sequenceNum = 0
-        state = {:running, indicator_r, indicator_w, sequenceNum}
+        request_hitcount = 0
+        state = {:running, indicator_r, indicator_w, sequenceNum, request_hitcount}
         {:ok, pid} = GenServer.start(Server, state, name: :server)
         GenServer.call(:server, :start, :infinity)
       role == "simulator" ->
