@@ -12,6 +12,8 @@ defmodule Engine do
   userPid - username (key), pid | mapping of username and pid
   userMentions - user_id (key), [[tweet_id, tweetText]]
            A list of tweets where a user is mentioned
+  loggedInUsers - userId, logged_in flag
+          logged_in if true = user is logged in else user is logged out
 
   Types -
   user_id: pid
@@ -28,16 +30,18 @@ defmodule Engine do
     #initialize all tables. See moduledoc for details
     :ets.new(:users, [:set, :public, :named_table])
     :ets.new(:following, [:set, :public, :named_table])
-    :ets.new(:tweets, [:set, :public, :named_table])
-    :ets.new(:hashtag, [:set, :public, :named_table])
+    :ets.new(:tweets, [:set, :public, :named_table, {:read_concurrency, true}, {:write_concurrency, true}])
+    :ets.new(:hashtag, [:set, :public, :named_table, {:read_concurrency, true}, {:write_concurrency, true}])
     :ets.new(:userPid, [:set, :public, :named_table])
-    :ets.new(:userMentions, [:set, :public, :named_table])
+    :ets.new(:userMentions, [:set, :public, :named_table, {:read_concurrency, true}, {:write_concurrency, true}])
+    :ets.new(:loggedInUsers, [:set, :public, :named_table])
   end
 
   #userName is client's PID
   def register(clientPid, userName) do
     :ets.insert_new(:users, {clientPid, userName, []})
     :ets.insert_new(:userPid, {userName, clientPid})
+    :ets.insert_new(:loggedInUsers, {clientPid, :true})
   end
 
   @doc """
@@ -93,7 +97,7 @@ defmodule Engine do
     EngineUtils.extractFromTweet(tweetText, 0, [], "@")
       |> Enum.each(fn(mention)->
         mention = Engine.getPid(mention)
-        IO.inspect ["PIDs of mentions", mention]
+        #IO.inspect ["PIDs of mentions", mention]
         #mention = EngineUtils.mentionToPid(mention)
         tweet = cond do
           :ets.member(:userMentions, mention) ->
@@ -103,6 +107,20 @@ defmodule Engine do
         end
         :ets.insert(:userMentions, {mention, tweet})
     end)
+  end
+
+  @doc """
+  LOGIN a client
+  """
+  def login(clientPid) do
+    :ets.insert(:loggedInUsers, {clientPid, :true})
+  end
+
+  @doc """
+  LOGOUT a client
+  """
+  def logout(clientPid) do
+    :ets.insert(:loggedInUsers, {clientPid, :false})
   end
 
   #----------------------------------------------------------------------------
@@ -142,8 +160,12 @@ defmodule Engine do
   @spec getTweets(pid) :: list
   def getTweets(clientPid) do
     #TODO sort tweets based on sequence number in descending order
-    [{_, tweet_list}]= :ets.lookup(:tweets, clientPid)
-    tweet_list
+    cond do
+      :ets.member(:tweets, clientPid) ->
+        [{_, tweet_list}]= :ets.lookup(:tweets, clientPid)
+        tweet_list
+      true -> []
+    end
   end
 
   @doc """
@@ -155,9 +177,14 @@ defmodule Engine do
   """
   @spec getTweetsHavingHashtag(String.t) :: list
   def getTweetsHavingHashtag(hashtag) do
+    #IO.inspect hashtag
     #TODO do the sorting of tweets
-    [{_, tweet_list}] = :ets.lookup(:hashtag, hashtag)
-    tweet_list
+    cond do 
+      :ets.member(:hashtag, hashtag) ->
+        [{_, tweet_list}] = :ets.lookup(:hashtag, hashtag)
+        tweet_list
+      true -> []
+    end
   end
 
   @doc """
@@ -172,6 +199,15 @@ defmodule Engine do
             tweet_list
         true -> []
     end
+  end
+
+  @doc """
+  Returns true if a user is logged in, else false
+  Eg: isLoggedIn(self()) will return true or false
+  """
+  def isLoggedIn(clientPid) do
+    [{_, flag}] = :ets.lookup(:loggedInUsers, clientPid)
+    flag == :true
   end
 end
 

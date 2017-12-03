@@ -10,14 +10,15 @@ defmodule ReadTweets do
   This method sends a timeline of tweets to the requestor
   These tweets are the tweets of a user that the clientId subscribes to
   """
-  def handle_cast({:search, clientId}, state) do
+  def handle_cast({:search, clientId, requestTime,request_hitcount}, state) do
     Engine.getFollowing(clientId) |> Enum.each(fn(person_i_follow) ->
-      Engine.getTweets(person_i_follow) |> Enum.each(fn(tweet) ->
+      tweet_list = Engine.getTweets(person_i_follow)
         # tweet -> [tweet_id, tweetText]
         # TODO turns into just a list of tweetTexts after sorting
-        GenServer.cast(clientId, {:search_result, Enum.at(tweet, 1)})
-      end)
+      GenServer.cast(clientId, {:search_result, tweet_list})
     end)
+    IO.inspect ["search processing time for tweet num #{request_hitcount}", :os.system_time(:milli_seconds) - requestTime]
+    
     {:noreply, state}
   end
 
@@ -25,8 +26,11 @@ defmodule ReadTweets do
   This method sends a timeline of tweets that contain specific hashtags
   """
   def handle_cast({:search_hashtag, clientId, hashtag_list}, state) do
+    #IO.inspect hashtag_list
     Enum.each(hashtag_list, fn(hashtag)->
-      Engine.getTweetsHavingHashtag(hashtag) |> Enum.each(fn(tweet) ->
+      String.replace(hashtag, "#", "") 
+      |> Engine.getTweetsHavingHashtag 
+      |> Enum.each(fn(tweet) ->
         # tweet -> [tweet_id, tweetText]
         # TODO turns into just a list of tweetTexts after sorting
         GenServer.cast(clientId, {:search_result_ht, Enum.at(tweet, 1)})
@@ -45,6 +49,19 @@ defmodule ReadTweets do
       # tweet -> [tweet_id, tweetText]
       # TODO turns into just a list of tweetTexts after sorting
       GenServer.cast(clientId, {:search_result_mention, Enum.at(tweet, 1)})
+    end)
+    {:noreply, state}
+  end
+
+    @doc """
+  This method sends a a list of tweets from which client retweets one
+  """
+  def handle_cast({:retweet, clientId, userName, hashtag_list}, state) do
+    #IO.inspect hashtag_list
+    Enum.each(hashtag_list, fn(hashtag)->
+      tweet_list = String.replace(hashtag, "#", "") 
+      |> Engine.getTweetsHavingHashtag 
+        GenServer.cast(clientId, {:retweet, userName, tweet_list})
     end)
     {:noreply, state}
   end

@@ -10,7 +10,8 @@ defmodule Project4 do
         indicator_r = 0
         indicator_w = 0
         sequenceNum = 0
-        state = {:running, indicator_r, indicator_w, sequenceNum}
+        request_hitcount = 0
+        state = {:running, indicator_r, indicator_w, sequenceNum, request_hitcount}
         {:ok, pid} = GenServer.start(Server, state, name: :server)
         GenServer.call(:server, :start, :infinity)
       role == "simulator" ->
@@ -21,10 +22,13 @@ defmodule Project4 do
                     |> elem(0)
         actorsPid = Simulator.start(numClients)
         Simulator.subscribe(actorsPid)
-        Simulator.sendTweet(actorsPid)
-        #Simulator.searchTweets(actorsPid)
+
+        minInterval = 1
+        #Simulator.sendTweet(actorsPid, minInterval, :tweet_subscribers)
+        #Simulator.searchTweets(actorsPid, :interval)
         #Simulator.searchMentions(actorsPid)
         #Simulator.searchHashtags(actorsPid)
+        Simulator.sendTweet(actorsPid, minInterval, :complete_simulation)
       true ->
         true
     end
