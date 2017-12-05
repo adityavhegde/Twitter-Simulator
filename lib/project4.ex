@@ -7,11 +7,12 @@ defmodule Project4 do
 
     cond do
       role == "server" ->
-        indicator_r = 0
-        indicator_w = 0
+        indicator_r = 0 # For the ReadActor
+        indicator_w = 0 # For the WriteActor
+        indicator_s = 0 # This is for the TweetActors
         sequenceNum = 0
         request_hitcount = 0
-        state = {:running, indicator_r, indicator_w, sequenceNum, request_hitcount}
+        state = {:running, indicator_r, indicator_w, indicator_s, sequenceNum, request_hitcount}
         {:ok, pid} = GenServer.start(Server, state, name: :server)
         GenServer.call(:server, :start, :infinity)
       role == "simulator" ->

@@ -20,24 +20,20 @@ defmodule ServerApi do
     #TODO send only to users that are connected
     #get client id for given username, get its followers, and send them the tweets
     #IO.puts "server sending tweets to clients"
-    {:running, indicator_r,indicator_w, sequenceNum, request_hitcount} = state
+    {_, indicator_r, indicator_w, indicator, sequenceNum, request_hitcount} = state
 
-    cond do 
+    cond do
       rem(request_hitcount+1, 1000) == 0->
         #IO.inspect ["tweet processing time for server", sequenceNum+1, :os.system_time(:milli_seconds) - tweet_time]
         IO.inspect ["tweet processing time for server", request_hitcount+1, :os.system_time(:milli_seconds)/1000]
       true -> true
     end
 
-    userPid
-    |> Engine.getFollowers()
-    |> Enum.filter(fn(pid) ->
-        Engine.isLoggedIn(pid) == true
-      end)
-    |> Enum.each(fn(pid) ->
-      GenServer.cast(pid, {:receiveTweet, tweet_time, tweetText})
-    end)
-    state = {:running, indicator_r,indicator_w, sequenceNum, request_hitcount+1}
+    indicator = rem((indicator + 1), 1000)
+    actorToCall = "tweetActor"<>Integer.to_string(indicator_r) |> String.to_atom()
+
+    GenServer.cast(actorToCall, {:tweet_subscribers, userPid, tweet_time, tweetText})
+    state = {:running, indicator_r,indicator_w, indicator, sequenceNum, request_hitcount+1}
   end
 
   @doc """
@@ -64,7 +60,7 @@ defmodule ServerApi do
   """
   def write(state, clientId, tweetText) do
     #IO.puts "writing tweets to server"
-    {_, indicator_r, indicator, sequenceNum, request_hitcount} = state
+    {_, indicator_r, indicator, indicator_s, sequenceNum, request_hitcount} = state
      [indicator, sequenceNum] =
        cond do
          indicator == 0 ->
@@ -76,44 +72,44 @@ defmodule ServerApi do
            GenServer.cast(:writeActor2, {:write_tweet, clientId, tweetText, sequenceNum})
            [0, sequenceNum]
        end
-    {:running, indicator_r, indicator, sequenceNum, request_hitcount}
+    {:running, indicator_r, indicator, indicator_s, sequenceNum, request_hitcount}
   end
 
   @doc """
   Helper functions used to distribute reads among the 2 Read Actors
   """
   def read(state, {:search, clientId, requestTime}) do
-    {_, indicator_r, indicator_w, sequenceNum, request_hitcount} = state
+    {_, indicator_r, indicator_w, indicator_s, sequenceNum, request_hitcount} = state
     indicator_r = rem((indicator_r + 1), 1000)
     actorToCall = "readActor"<>Integer.to_string(indicator_r) |> String.to_atom()
 
     GenServer.cast(actorToCall, {:search, clientId, requestTime, request_hitcount+1})
 
-    {:running, indicator_r, indicator_w, sequenceNum, request_hitcount+1}
+    {:running, indicator_r, indicator_w, indicator_s, sequenceNum, request_hitcount+1}
   end
   def read(state, {:search_hashtag, clientId, hashtag_list}) do
-    {_, indicator_r, indicator_w, sequenceNum, request_hitcount} = state
+    {_, indicator_r, indicator_w, indicator_s, sequenceNum, request_hitcount} = state
     indicator_r = rem((indicator_r + 1), 1000)
     actorToCall = "readActor"<>Integer.to_string(indicator_r) |> String.to_atom()
 
     GenServer.cast(actorToCall, {:search_hashtag, clientId, hashtag_list})
 
-    {:running, indicator_r, indicator_w, sequenceNum, request_hitcount+1}
+    {:running, indicator_r, indicator_w, indicator_s, sequenceNum, request_hitcount+1}
   end
   def read(state, {:search_mentions, clientId}) do
-    {_, indicator_r, indicator_w, sequenceNum, request_hitcount} = state
+    {_, indicator_r, indicator_w, indicator_s,sequenceNum, request_hitcount} = state
     indicator_r = rem((indicator_r + 1), 1000)
     actorToCall = "readActor"<>Integer.to_string(indicator_r) |> String.to_atom()
     GenServer.cast(actorToCall, {:search_mentions, clientId})
-    {:running, indicator_r, indicator_w, sequenceNum, request_hitcount+1}
+    {:running, indicator_r, indicator_w, indicator_s, sequenceNum, request_hitcount+1}
   end
   def read(state, {:retweet, clientId, userName, hashtag_list}) do
-    {_, indicator_r, indicator_w, sequenceNum, request_hitcount} = state
+    {_, indicator_r, indicator_w, indicator_s, sequenceNum, request_hitcount} = state
     indicator_r = rem((indicator_r + 1), 1000)
     actorToCall = "readActor"<>Integer.to_string(indicator_r) |> String.to_atom()
 
     GenServer.cast(actorToCall, {:retweet, clientId, userName, hashtag_list})
 
-    {:running, indicator_r, indicator_w, sequenceNum, request_hitcount+1}
+    {:running, indicator_r, indicator_w, indicator_s, sequenceNum, request_hitcount+1}
   end
 end

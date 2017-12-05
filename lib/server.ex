@@ -9,6 +9,10 @@ defmodule Server do
       actorName = "readActor"<>Integer.to_string(index) |> String.to_atom()
       GenServer.start(ReadTweets, :running, name: actorName)
     end)
+    Enum.each(0..1000, fn(index)->
+      actorName = "tweetActor"<>Integer.to_string(index) |> String.to_atom()
+      GenServer.start(TweetActor, :running, name: actorName)
+    end)
     # GenServer.start(ReadTweets, :running, name: :readActor1)
     # GenServer.start(ReadTweets, :running, name: :readActor2)
     GenServer.start(WriteTweet, :running, name: :writeActor1)
@@ -54,7 +58,7 @@ defmodule Server do
     clientId = Engine.getPid(userName)
     state = ServerApi.write(state, clientId, tweetText)
     state = ServerApi.tweetSubscribers(clientId, tweet_time, tweetText, state)
-    ServerApi.tweetMentions(tweetText)
+    #ServerApi.tweetMentions(tweetText)
     {:noreply, state}
   end
   #-----------------------------------------------------------------------------
