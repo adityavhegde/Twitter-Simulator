@@ -28,8 +28,8 @@ defmodule ReadTweets do
   def handle_cast({:search_hashtag, clientId, hashtag_list}, state) do
     #IO.inspect hashtag_list
     Enum.each(hashtag_list, fn(hashtag)->
-      String.replace(hashtag, "#", "") 
-      |> Engine.getTweetsHavingHashtag 
+      String.replace(hashtag, "#", "")
+      |> Engine.getTweetsHavingHashtag
       |> Enum.each(fn(tweet) ->
         # tweet -> [tweet_id, tweetText]
         # TODO turns into just a list of tweetTexts after sorting
@@ -59,8 +59,8 @@ defmodule ReadTweets do
   def handle_cast({:retweet, clientId, userName, hashtag_list}, state) do
     #IO.inspect hashtag_list
     Enum.each(hashtag_list, fn(hashtag)->
-      tweet_list = String.replace(hashtag, "#", "") 
-      |> Engine.getTweetsHavingHashtag 
+      tweet_list = String.replace(hashtag, "#", "")
+      |> Engine.getTweetsHavingHashtag
         GenServer.cast(clientId, {:retweet, userName, tweet_list})
     end)
     {:noreply, state}

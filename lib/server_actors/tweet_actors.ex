@@ -18,6 +18,18 @@ defmodule TweetActors do
     |> Enum.each(fn(pid) ->
       GenServer.cast(pid, {:receiveTweet, tweet_time, tweetText})
     end)
+
+    tweetText
+    |> EngineUtils.extractFromTweet(0, [], "@")
+    |> Enum.each(fn(userName) ->
+      pid = Engine.getPid(userName)
+      cond do
+        Engine.isLoggedIn(pid) == true ->
+          GenServer.cast(pid, {:receiveTweet, tweetText})
+        true -> true
+      end
+    end)
+
     {:noreply, state}
   end
 

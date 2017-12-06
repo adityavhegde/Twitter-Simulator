@@ -38,6 +38,7 @@ defmodule ServerApi do
 
   @doc """
   Sends a tweet to all the mentions in a tweet
+  Note: This function is not used anymore, since its functionality is handled by TweetActors
   """
   def tweetMentions(tweetText) do
     tweetText
