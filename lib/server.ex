@@ -56,9 +56,9 @@ defmodule Server do
   # Write and send tweets to subscribers
   def handle_cast({:tweet_subscribers, tweet_time, tweetText, userName}, state) do
     clientId = Engine.getPid(userName)
-    state = ServerApi.write(state, clientId, tweetText)
     state = ServerApi.tweetSubscribers(clientId, tweet_time, tweetText, state)
-    #DO NOT ucomment, already handled in tweetActor -> ServerApi.tweetMentions(tweetText) 
+    state = ServerApi.write(state, clientId, tweetText)
+    #DO NOT ucomment, already handled in tweetActor -> ServerApi.tweetMentions(tweetText)
     {:noreply, state}
   end
   #-----------------------------------------------------------------------------
